@@ -8,7 +8,7 @@ const Base = require('./base');
 
 const BROWSER_SUFFIX = '_browser';
 const NODE_SUFFIX = '_node';
-const PARALLEL_TEST_COUNT = 2;
+const PARALLEL_TEST_COUNT = 1;
 
 let getReportTemplate = () => {
    return {
