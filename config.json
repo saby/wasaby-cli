@@ -57,7 +57,7 @@
          "url": "https://git.sbis.ru/engine/viewsettings.git"
       },
       "sbis-plugin-client": {
-         "url": "https://git.sbis.ru/sbis/plugin-client.git"
+         "url": "https://git.sbis.ru/plugin/client.git"
       },
       "navigation-configuration": {
          "url": "https://git.sbis.ru/navigation-configuration/navigation.git"
