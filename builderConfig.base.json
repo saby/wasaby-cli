@@ -9,34 +9,5 @@
    "less": true,
    "themes": true,
    "symlinks": false,
-   "modules": [
-      {
-         "name": "Upload",
-         "path": "../git_repos/_repos/sbis3.engine/client/Upload"
-      }, {
-         "name": "Headers",
-         "path": "../git_repos/_repos/sbis3.engine/client/Headers"
-      }, {
-         "name": "Merge",
-         "path": "../git_repos/_repos/sbis3.engine/client/Merge"
-      }, {
-         "name": "Name",
-         "path": "../git_repos/_repos/sbis3.engine/client/Name"
-      }, {
-         "name": "Unload",
-         "path": "../git_repos/_repos/sbis3.engine/client/Name"
-      }, {
-         "name": "DependencyWatcher",
-         "path": "../git_repos/_repos/saby-devtool/src/app/DependencyWatcher"
-      }, {
-         "name": "Devtool",
-         "path": "../git_repos/_repos/saby-devtool/src/app/Devtool"
-      }, {
-         "name": "Elements",
-         "path": "../git_repos/_repos/saby-devtool/src/app/Elements"
-      }, {
-         "name": "Search",
-         "path": "../git_repos/_repos/saby-devtool/src/app/Search"
-      }
-   ]
+   "modules": []
 }
