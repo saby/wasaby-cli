@@ -124,7 +124,18 @@ describe('Store', () => {
             return Promise.resolve();
          });
 
-         store.checkout('name', '20.1000/branch', 'pathToRep');
+         store.checkout('name', '20.1000/branch');
+      });
+
+      it('should checkout branch to rc if rep has commit hash', (done) => {
+         stubExecute.callsFake((cmd, path, params) => {
+            if (typeof params.processName === 'string' && params.processName.includes('checkout')) {
+               chai.expect(cmd).to.equal('git checkout -f rc-12');
+               done();
+            }
+            return Promise.resolve();
+         });
+         store.checkout('name', 'b2563dfa');
       });
 
       it('should throw error if checkoutBranch is undefined', (done) => {
@@ -140,7 +151,7 @@ describe('Store', () => {
             return Promise.resolve();
          });
          stubModule = sinon.stub(store, '_testRep').value('test');
-         store.checkout('test', '20.1000/branch', 'pathToRep').then(() => {
+         store.checkout('test', '20.1000/branch').then(() => {
             chai.expect(`git merge remotes/origin/${store._rc}`).to.equal(commandsArray[5]);
             done();
          });
@@ -153,7 +164,7 @@ describe('Store', () => {
             }
          });
          stubModule = sinon.stub(store, '_testRep').value('test');
-         store.checkout('test', 'branch', 'pathToRep').catch(() => {
+         store.checkout('test', 'branch').catch(() => {
             done();
          });
       });
@@ -167,7 +178,7 @@ describe('Store', () => {
             }
          });
          stubModule = sinon.stub(store, '_testRep').value('test');
-         store.checkout('test', '20.1000/branch', 'pathToRep').catch(() => {
+         store.checkout('test', '20.1000/branch').catch(() => {
             done();
          });
       });
@@ -181,7 +192,7 @@ describe('Store', () => {
             return Promise.resolve();
          });
 
-         store.checkout('name', 'b2563dfa', 'pathToRep');
+         store.checkout('name', 'b2563dfa');
       });
 
       afterEach(() => {
