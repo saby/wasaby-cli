@@ -290,5 +290,22 @@ describe('Test', () => {
          stubDiff.value(new Map([['test1', ['test13/1.js']]]));
          chai.expect(test._shouldTestModule('test11')).to.be.false;
       });
+   });
+
+   describe('._setDiff()', function () {
+      let spySetDiff;
+      beforeEach(() => {
+         spySetDiff = sinon.spy(test, '_setDiffByRep');
+      });
+      it('shouldnt call setDiff if it disabled ', () => {
+         sinon.stub(test, '_isUseDiff').value(false);
+         test._setDiff();
+         chai.expect(spySetDiff.notCalled).to.be.true;
+      });
+      it('shouldnt call setDiff if it disabled ', () => {
+         sinon.stub(test, '_isUseDiff').value(true);
+         test._setDiff();
+         chai.expect(spySetDiff.calledWith('test1')).to.be.true;
+      });
    })
 });
