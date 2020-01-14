@@ -13,6 +13,7 @@ const BROWSER_SUFFIX = '_browser';
 const NODE_SUFFIX = '_node';
 const PARALLEL_TEST_COUNT = 2;
 const TEST_TIMEOUT = 60*5*1000;
+const REPORT_PATH = '{workspace}/artifacts/{module}/xunit-report.xml';
 const _private = {
 
    /**
@@ -32,7 +33,7 @@ const _private = {
    }),
 
    /**
-    * Возвращает шаблон тескейса для xml
+    * Возвращает шаблон тескейса c ошибкой для xml
     * @param {String} testName Название теста
     * @param {String} details Детализация ошибки
     * @returns {{$: {classname: string, name: string, time: string}, failure: *}}
@@ -45,7 +46,17 @@ const _private = {
       },
       failure: details
    }),
-
+   /**
+    * Возвращает шаблон тескейса для xml
+    * @param {String} testName Название теста
+    * @returns {{$: {classname: string, name: string}}}
+    */
+   getSuccessTestCase: (testName) => ({
+      $: {
+         classname: `[${testName}]: Tests has not been run`,
+         name: 'Tests has not been run, because can\'t found any changes in modules'
+      }
+   }),
    /**
     * Возвращает путь до конфига юнит тестов
     * @param {String} repName Название репозитрия
@@ -78,6 +89,7 @@ class Test extends Base {
       this._rc = cfg.rc;
       this._server = cfg.server;
       this._testRep = cfg.testRep;
+      this._isUseDiff = cfg.diff;
       this._modulesMap = new ModulesMap({
          reposConfig: cfg.reposConfig,
          store: cfg.store,
@@ -168,9 +180,20 @@ class Test extends Base {
       cfg.root = path.relative(process.cwd(), this._resources);
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.jsonCoverageReport = cfg.jsonCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
-      cfg.report = cfg.report.replace('{module}', fullName).replace('{workspace}', workspace);
+      cfg.report = this.getReportPath(fullName);
       this._testReports.set(fullName, cfg.report);
       return cfg;
+   }
+
+   /**
+    * Возвращает путь до конфига
+    * @param {string} fullName - название модуля с тестами
+    * @returns {string}
+    */
+   getReportPath(fullName) {
+      const workspace = path.relative(process.cwd(), this._workspace);
+      return REPORT_PATH.replace('{module}', fullName)
+         .replace('{workspace}', workspace ? workspace : '.');
    }
 
    /**
@@ -224,12 +247,26 @@ class Test extends Base {
                this._startBrowserTest(moduleName, moduleName)
             ]);
          }
+
+         this._createSuccessReport(moduleName);
+
          logger.log('Тесты не были запущены т.к. нет изменений в модуле', moduleName);
+
       }, {
          concurrency: PARALLEL_TEST_COUNT
       });
    }
 
+   /**
+    * Создает отчет
+    * @param {String} moduleName Название модуля с тестами
+    * @private
+    */
+   _createSuccessReport(moduleName) {
+      const report = _private.getReportTemplate();
+      report.testsuite.testcase.push(_private.getSuccessTestCase(moduleName));
+      xml.writeXmlFile(this.getReportPath(moduleName), report);
+   }
    /**
     * Запускает юниты под нодой
     * @param {String} repName - Название репозитория в конфиге
@@ -330,9 +367,11 @@ class Test extends Base {
     */
    _setDiff() {
       const result = [];
-      for (const name of this._testRep) {
-         if (name !== 'all') {
-            result.push(this._setDiffByRep(name));
+      if (this._isUseDiff) {
+         for (const name of this._testRep) {
+            if (name !== 'all') {
+               result.push(this._setDiffByRep(name));
+            }
          }
       }
       return Promise.all(result);
@@ -350,7 +389,7 @@ class Test extends Base {
          name: repName
       });
       const branch = await git.getBranch();
-      if (branch !== this._rc) {
+      if (this._rc && branch !== this._rc) {
          this._diff.set(repName, await git.diff(branch, this._rc));
       }
    }

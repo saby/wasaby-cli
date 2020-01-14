@@ -24,7 +24,7 @@ class Cli {
       this._store = this._argvOptions.store || path.join(__dirname, cfg.store);
       // на _repos остались завязаны srv и скрипт сборки пока это не убрать
       this._store = path.join(this._store, '_repos');
-      this._testRep = this._argvOptions.rep ? this._argvOptions.rep.split(',').map(name => name.trim()) : cfg.testRep;
+      this._testRep = this._argvOptions.rep ? this._argvOptions.rep.split(',').map(name => name.trim()) : (cfg.testRep || ['all']);
       this._rc = this._argvOptions.rc || cfg.rc;
       this._workDir = this._argvOptions.workDir || path.join(process.cwd(), cfg.workDir);
       this._workspace = this._argvOptions.workspace || process.cwd();
@@ -105,7 +105,8 @@ class Cli {
          workspace: this._workspace,
          only: !!this._argvOptions.only,
          server: !!this._argvOptions.server,
-         rc: this._rc
+         rc: this._rc,
+         diff: this._argvOptions.diff
       });
 
       await test.run();
