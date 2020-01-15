@@ -58,6 +58,7 @@ class Cli {
       if (this.tasks.includes('devServer')) {
          await this.devServer();
       }
+
    }
 
    async build() {
@@ -133,6 +134,8 @@ class Cli {
          await devServer.stop();
       } else if (this._argvOptions.convertDB) {
          await devServer.convertDB();
+      }  else if (this._argvOptions.createIni) {
+         await devServer.createIni();
       }
    }
 

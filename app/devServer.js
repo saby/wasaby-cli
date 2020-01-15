@@ -40,12 +40,24 @@ class DevServer {
       this._workspace = cfg.workspace;
       this._dbSchema = cfg.dbSchema;
       this._dbConnection = {
-         host: DB_CONNECTION.host || cfg.dbHost,
-         dbName: DB_CONNECTION.dbName || cfg.dbName,
-         login: DB_CONNECTION.login || cfg.dbLogin,
-         password: DB_CONNECTION.password || cfg.dbPassword,
-         port: DB_CONNECTION.port || cfg.dbPort
+         host: cfg.dbHost || DB_CONNECTION.host,
+         dbName:  cfg.dbName || DB_CONNECTION.dbName,
+         login: cfg.dbLogin || DB_CONNECTION.login,
+         password: cfg.dbPassword || DB_CONNECTION.password,
+         port: cfg.dbPort || DB_CONNECTION.port
       };
+   }
+
+   /**
+    * Создает ini файлы в сервисах
+    * @returns {Promise<void>}
+    */
+   async createIni() {
+      const pathService = path.join(this._workDir, await this._getServicePath());
+      const pathServicePS = path.join(this._workDir, await this._getServicePathPS());
+
+      await this._copyServiceIni(pathService);
+      await this._copyServicePSIni(pathServicePS);
    }
 
    /**
@@ -54,22 +66,19 @@ class DevServer {
     */
    async start() {
       await this._linkCDN();
-      const pathService = path.join(this._workDir, await this._getServicePath());
-      const pathServicePS = path.join(this._workDir, await this._getServicePathPS());
-
-      await this._copyServiceIni(pathService);
-      await this._copyServicePSIni(pathServicePS);
+      await this.createIni();
 
       process.on('SIGINT', async () => {
          await this.stop();
       });
 
+      const pathService = path.join(this._workDir, await this._getServicePath());
+      const pathServicePS = path.join(this._workDir, await this._getServicePathPS());
+
       await Promise.all([
          this._start(await this._getServicePath(), pathService),
          this._start(await this._getServicePathPS(), pathServicePS)
       ]);
-
-
    }
 
    /**
