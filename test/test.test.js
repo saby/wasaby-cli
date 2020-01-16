@@ -240,7 +240,7 @@ describe('Test', () => {
       });
 
       it('should make failure report if it is empty', (done) => {
-         stubRead.callsFake(() => '<testsuite errors="0"></testsuite>');
+         stubRead.callsFake(() => '<testsuite tests="1"></testsuite>');
          stubTestReports = sinon.stub(test._modulesMap, 'getTestModules').callsFake(() => ['test']);
          stubTestError.value({test: ['error']});
          stubWrite.callsFake((name, obj) => {
