@@ -127,9 +127,8 @@ class Test extends Base {
                      }
                   };
                }
-               //до выполнения задачи https://online.sbis.ru/opendoc.html?guid=2b75077c-2bd9-45c4-94e6-d257e6ce31e4
                //этим ошибкам верить нельзя, добавляем только если нет упавших юнитов
-               if (errorText && xmlObject.testsuite.$.errors === '0') {
+               if (errorText && xmlObject.testsuite.$.tests === '1') {
                   result.testsuite.testcase.push(_private.getErrorTestCase(name, errorText));
                }
 
