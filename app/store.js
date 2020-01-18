@@ -82,15 +82,21 @@ class Store extends Base {
       const isBranch = commit.includes('/') || commit.includes('rc-');
 
       logger.log(`Переключение на ветку ${commit}`, name);
-
       await git.update();
-
-      try {
-         await git.checkout(isBranch ? commit : this._rc);
-      } catch (err) {
-         throw new Error(`Ошибка при переключение на ветку ${commit} в репозитории ${this._name}: ${err}`);
+      if (isBranch) {
+         try {
+            await git.checkout(commit);
+         } catch (err) {
+            if (/rc-.*00/.test(commit)) {
+               // для некоторых репозиториев нет ветки yy.v00 только yy.v10 (19.610) в случае
+               // ошибки переключаемся на 10 версию
+               let replacedCommit = commit.replace('00', '10');
+               await git.checkout(replacedCommit.replace('00', '10'));
+            } else {
+               throw new Error(`Ошибка при переключение на ветку ${commit} в репозитории ${this._name}: ${err}`);
+            }
+         }
       }
-
       await git.reset(isBranch ? `remotes/origin/${commit}` : commit);
       await git.clean();
 
