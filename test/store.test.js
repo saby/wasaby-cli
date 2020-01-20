@@ -146,6 +146,19 @@ describe('Store', () => {
          });
       });
 
+      it('should merge branch with rc if rep is additional', (done) => {
+         let commandsArray = [];
+         stubExecute.callsFake((cmd) => {
+            commandsArray.push(cmd);
+            return Promise.resolve();
+         });
+         stubModule = sinon.stub(store, '_testRep').value('test');
+         store.checkout('testAdd', '20.1000/branch', 'pathToRep').then(() => {
+            chai.expect(`git merge remotes/origin/${store._rc}`).to.equal(commandsArray[5]);
+            done();
+         });
+      });
+
       it('should throw error if merge is failed', (done) => {
          stubExecute.callsFake((cmd) => {
             if (cmd.includes('merge')) {
