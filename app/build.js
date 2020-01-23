@@ -153,15 +153,18 @@ class Build extends Base {
       await this._prepareDeployCfg(deploy);
 
       await sdk.jinneeDeploy(deploy, logs, project.file);
+      const testList = this._modulesMap.getTestList();
 
-      const builderOutput = path.join(this._workDir, 'builder_test');
-      await this._initWithBuilder(builderOutput);
-      fs.readdirSync(builderOutput).forEach((f) => {
-         let dirPath = path.join(builderOutput, f);
-         if (fs.statSync(dirPath).isDirectory()) {
-            fs.ensureSymlink(dirPath, path.join(this._resources, f));
-         }
-      });
+      if (testList.length > 0) {
+         const builderOutput = path.join(this._workDir, 'builder_test');
+         await this._initWithBuilder(builderOutput);
+         fs.readdirSync(builderOutput).forEach((f) => {
+            let dirPath = path.join(builderOutput, f);
+            if (fs.statSync(dirPath).isDirectory()) {
+               fs.ensureSymlink(dirPath, path.join(this._resources, f));
+            }
+         });
+      }
    }
 
    /**
@@ -208,12 +211,6 @@ class Build extends Base {
       const builderConfig = require(this._builderBaseConfig);
       const testList = this._modulesMap.getTestList();
 
-      builderConfig.modules.forEach((item) => {
-         if (this._modulesMap.has(item.name)) {
-            const cfg = this._modulesMap.get(item.name);
-            item.path = cfg.path;
-         }
-      });
       this._modulesMap.getChildModules(testList).forEach((moduleName) => {
          const cfg = this._modulesMap.get(moduleName);
          if (moduleName !== 'unit' && !cfg.srv) {

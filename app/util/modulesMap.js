@@ -134,9 +134,10 @@ class ModulesMap {
     * Возвращает список модулей содержащих юнит тесты и его зависимости
     * @return {Array}
     */
-    getTestModulesWithDepends(name) {
+   getTestModulesWithDepends(name) {
       let result = [];
-      this._testModulesMap.get(name).forEach((moduleName) => {
+      const modules = this._testModulesMap.get(name) || [];
+      modules.forEach((moduleName) => {
          const cfg = this._modulesMap.get(moduleName);
          result = result.concat(cfg.depends || []).filter(depend => (
             !!this._modulesMap.get(depend).forTests
