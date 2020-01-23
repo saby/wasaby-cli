@@ -1,6 +1,6 @@
 {
    "name": "test-cli",
-   "version": "20.1000.0",
+   "version": "20.1100.0",
    "description": "",
    "main": "cli.js",
    "scripts": {
@@ -16,9 +16,9 @@
       "express": "^4.16.3",
       "fs-extra": "^7.0.1",
       "p-map": "^2.1.0",
-      "saby-typescript": "git+https://platform-git.sbis.ru/saby/TypeScript.git#rc-20.1000",
-      "saby-units": "git+https://platform-git.sbis.ru/saby/Units.git#rc-20.1000",
-      "sbis3-builder": "git+https://platform-git.sbis.ru/saby/Builder.git#rc-20.1000",
+      "saby-typescript": "git+https://platform-git.sbis.ru/saby/TypeScript.git#rc-20.1100",
+      "saby-units": "git+https://platform-git.sbis.ru/saby/Units.git#rc-20.1100",
+      "sbis3-builder": "git+https://platform-git.sbis.ru/saby/Builder.git#rc-20.1100",
       "serve-static": "^1.14.1",
       "shelljs": "^0.8.3",
       "webdriverio": "5.16.6",
