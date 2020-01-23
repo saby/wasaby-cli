@@ -242,8 +242,8 @@ class Test extends Base {
          if (this._shouldTestModule(moduleName)) {
             logger.log('Запуск тестов', moduleName);
             return Promise.all([
-               this._startNodeTest(moduleName, moduleName),
-               this._startBrowserTest(moduleName, moduleName)
+               this._startNodeTest(moduleName),
+               this._startBrowserTest(moduleName)
             ]);
          }
 
@@ -268,19 +268,18 @@ class Test extends Base {
    }
    /**
     * Запускает юниты под нодой
-    * @param {String} repName - Название репозитория в конфиге
-    * @param {Array} testModules - Список модулей с тестами
+    *  @param {String} moduleName - Название модуля
     * @return {Promise<void>}
     * @private
     */
-   async _startNodeTest(repName, testModules) {
+   async _startNodeTest(moduleName) {
       try {
          if (!this._server) {
-            const pathToConfig = _private.getPathToTestConfig(repName, false);
+            const pathToConfig = _private.getPathToTestConfig(moduleName, false);
 
             await this._makeTestConfig({
-               name: repName,
-               testModules: testModules,
+               name: moduleName,
+               testModules: moduleName,
                path: pathToConfig,
                isBrowser: false
             });
@@ -289,13 +288,13 @@ class Test extends Base {
                `node node_modules/saby-units/cli.js --isolated --report --config=${pathToConfig}`,
                process.cwd(),
                {
-                  processName: `test node ${repName}`,
+                  processName: `test node ${moduleName}`,
                   timeout: TEST_TIMEOUT
                }
             );
          }
       } catch (e) {
-         this._testErrors[repName + NODE_SUFFIX] = e;
+         this._testErrors[moduleName + NODE_SUFFIX] = e;
       }
    }
 
@@ -309,35 +308,50 @@ class Test extends Base {
       const moduleCfg = this._modulesMap.get(moduleName);
       if (moduleCfg.testInBrowser) {
          const configPath = _private.getPathToTestConfig(moduleName, true);
-
-         await this._makeTestConfig({
-            name: moduleName,
-            testModules: moduleName,
-            path: configPath,
-            isBrowser: true
-         });
-
          let cmd = '';
          if (this._server) {
             cmd = `node node_modules/saby-units/cli/server.js --config=${configPath}`;
          } else {
             cmd = `node node_modules/saby-units/cli.js --browser --report --config=${configPath}`;
          }
-
-         try {
-            logger.log('Запуск тестов в браузере', moduleName);
-            await this._shell.execute(
-               cmd,
-               process.cwd(),
-               {
-                  processName: `test browser ${moduleName}`,
-                  timeout: TEST_TIMEOUT
-               }
-            );
-         } catch (e) {
-            this._testErrors[moduleName + BROWSER_SUFFIX] = e;
-         }
+         logger.log('Запуск тестов в браузере', moduleName);
+         await this._executeBrowserTestCmd(cmd, moduleName, configPath);
          logger.log('тесты в браузере завершены', moduleName);
+      }
+   }
+
+   /**
+    *
+    * @param {String} cmd - shell команда которую надо выполнить
+    * @param {String} moduleName - Название модуля
+    * @param {String} configPath - Путь до конфига
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _executeBrowserTestCmd(cmd, moduleName, configPath) {
+      await this._makeTestConfig({
+         name: moduleName,
+         testModules: moduleName,
+         path: configPath,
+         isBrowser: true
+      });
+
+      try {
+         await this._shell.execute(
+            cmd,
+            process.cwd(),
+            {
+               processName: `test browser ${moduleName}`,
+               timeout: TEST_TIMEOUT
+            }
+         );
+      } catch (errors) {
+         if (errors.some((error) => error.includes('EADDRINUSE'))) {
+            logger.log('Порт занят, повторный запуск тестов', moduleName);
+            await this._executeBrowserTestCmd(cmd, moduleName, configPath);
+         } else {
+            this._testErrors[moduleName + BROWSER_SUFFIX] = errors;
+         }
       }
    }
 
