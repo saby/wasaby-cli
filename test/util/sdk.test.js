@@ -6,38 +6,41 @@ const Sdk = require('../../app/util/sdk');
 
 let sdk;
 let stubExecute;
+let stubSdk;
+let stubExistsSync;
+let stubStatSync;
 
 describe('Sdk', () => {
+   before(() => {
+      process.env.SDK = process.env.SDK || '';
+      process.env.SBISPlatformSDK_101000 = process.env.SBISPlatformSDK_101000 || '';
+   });
+
    beforeEach(() => {
       sdk = new Sdk({
          rc: 'rc-10.1000',
          workspace: 'application'
       });
-      stubExecute = sinon.stub(sdk._shell, 'execute').callsFake(() => undefined);
+      stubExistsSync = sinon.stub(fs, 'existsSync').callsFake(() => true);
+      stubExecute = sinon.stub(sdk._shell, 'execute').callsFake(() => []);
+      stubStatSync = sinon.stub(fs, 'statSync').callsFake(() => {
+         return {isFile: () => false};
+      });
    });
 
    afterEach(() => {
       stubExecute.restore();
+      stubExistsSync.restore();
+      stubStatSync.restore();
    });
+
    describe('.getPathToJinnee()', () => {
-      let stubsdk;
-      let stubExistsSync;
-      let stubStatSync;
-
-      beforeEach(() => {
-         stubsdk = sinon.stub(sdk, 'getPathToSdk').callsFake(() => 'sdk');
-         stubExistsSync = sinon.stub(fs, 'existsSync').callsFake(() => true);
-         stubStatSync = sinon.stub(fs, 'statSync').callsFake(() => {
-            return {isFile: () => false};
-         });
+      before(() => {
+         stubSdk = sinon.stub(process.env, 'SBISPlatformSDK_101000').value('sdk');
       });
-
-      afterEach(() => {
-         stubsdk.restore();
-         stubExistsSync.restore();
-         stubStatSync.restore();
+      after(() => {
+         stubSdk.restore();
       });
-
       it('should return path to jinnee', async() => {
          chai.expect(await sdk.getPathToJinnee()).to.equal(path.join('sdk', 'tools', 'jinnee'));
       });
@@ -72,21 +75,8 @@ describe('Sdk', () => {
    });
 
    describe('getPathToSdk()', () => {
-      let stubSdk;
-      let stubExists;
-
-      before(() => {
-         process.env.SDK = process.env.SDK || '';
-         process.env.SBISPlatformSDK_101000 = process.env.SBISPlatformSDK_101000 || '';
-      });
-
-      beforeEach(() => {
-         stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
-      });
-
       afterEach(() => {
          stubSdk.restore();
-         stubExists.restore();
       });
 
       it('should return sdk path from SDK', () => {
@@ -106,8 +96,24 @@ describe('Sdk', () => {
 
       it('should throw an error when sdk is not exists', () => {
          stubSdk = sinon.stub(process.env, 'SBISPlatformSDK_101000').value('path/to/sdk');
-         stubExists.callsFake(() => false);
+         stubExistsSync.callsFake(() => false);
          chai.expect(() => sdk.getPathToSdk()).to.throw();
+      });
+   });
+
+   describe('jinneeDeploy', () => {
+      before(() => {
+         stubSdk = sinon.stub(process.env, 'SBISPlatformSDK_101000').value('sdk');
+      });
+      after(() => {
+         stubSdk.restore();
+      });
+      it('should call deploy', (done) => {
+         stubExecute.callsFake((cmd) => {
+            chai.expect(cmd).is.include('jinnee-utility');
+            done();
+         });
+         sdk.jinneeDeploy();
       });
    });
 });

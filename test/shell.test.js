@@ -157,6 +157,23 @@ describe('Shell', () => {
          shellUtil.execute('help', 'path');
       });
 
+      it('should throw error if stdout contents error label', (done) => {
+         stubExec = sinon.stub(shell, 'exec').callsFake(() => {
+            let process = getProcess();
+            process.withErrorKill = true;
+            setTimeout(() => {
+               process.stdout.data('[error]: ttttt');
+               process.kill();
+            });
+            return process;
+         });
+
+         shellUtil.execute('help', 'path', {errorLabel: '[error]:'}).catch(errors => {
+            chai.expect(errors[0]).to.equal('[error]: ttttt');
+            done();
+         });
+      });
+
       afterEach(()=> {
          stubExec.restore();
       })

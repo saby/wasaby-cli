@@ -14,9 +14,10 @@ class Shell {
 
    /**
     * Параметры child_process.exec https://nodejs.org/api/child_process.html#child_process_child_process_exec_command_options_callback
-    * @typedef {Object}
+    * @typedef ExecParams {Object}
     * @property {Boolean} force Если true в случае ошибки вернет промис resolve.
     * @property {String} processName Метка процесса в логах.
+    * @property {String} errorLabel Метка, по которой сообщение в stdout будет распознано как ошибка.
     */
    /**
     * Выполняет команду shell
@@ -41,7 +42,11 @@ class Shell {
 
          cloneProcess.stdout.on('data', (data) => {
             logger.log(data, execParams.processName);
-            result.push(data.trim());
+            if (execParams.errorLabel && data.includes(execParams.errorLabel)) {
+               errors.push(data);
+            } else {
+               result.push(data.trim());
+            }
          });
 
          cloneProcess.stderr.on('data', (data) => {

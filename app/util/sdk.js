@@ -73,7 +73,8 @@ class sdk {
       return this._shell.execute(
          `${jinneeCli} --deploy_stand=${deploy} --logs_dir=${logs} --project=${project}`,
          pathToJinnee, {
-            name: 'jinnee-deploy'
+            name: 'jinnee-deploy',
+            errorLabel: '[ERROR]	Gulp:'
          }
       );
    }
