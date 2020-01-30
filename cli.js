@@ -35,6 +35,7 @@ class Cli {
 
          // если сборка идет джином то исходники лежат в  intest-ps/ui/resources
          this._resources = path.join(this._workDir, 'intest-ps', 'ui', 'resources');
+         this._realResources = path.join(this._workDir, 'build-ui', 'resources');
       } else {
          this._buildTools = 'builder';
          this._resources = this._workDir;
@@ -100,6 +101,7 @@ class Cli {
          ports: this._argvOptions.ports || '',
          reposConfig: this._reposConfig,
          resources: this._resources,
+         realResources: this._realResources,
          store: this._store,
          testRep: this._testRep,
          workDir: this._workDir,
@@ -107,7 +109,8 @@ class Cli {
          only: !!this._argvOptions.only,
          server: !!this._argvOptions.server,
          rc: this._rc,
-         diff: this._argvOptions.diff
+         diff: this._argvOptions.diff,
+         coverage: this._argvOptions.coverage
       });
 
       await test.run();

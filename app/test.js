@@ -90,6 +90,8 @@ class Test extends Base {
       this._server = cfg.server;
       this._testRep = cfg.testRep;
       this._isUseDiff = cfg.diff;
+      this._coverage = cfg.coverage;
+      this._realResources = cfg.realResources;
       this._modulesMap = new ModulesMap({
          reposConfig: cfg.reposConfig,
          store: cfg.store,
@@ -172,6 +174,7 @@ class Test extends Base {
       let cfg = { ...testConfig };
       const fullName = name + (suffix || '');
       let workspace = path.relative(process.cwd(), this._workspace);
+      testModules = typeof testModules === 'Array' ? testModules : [testModules]
       workspace = workspace ? workspace : '.';
       cfg.url = { ...cfg.url };
       cfg.url.port = await getPort();
@@ -180,6 +183,19 @@ class Test extends Base {
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.jsonCoverageReport = cfg.jsonCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.report = this.getReportPath(fullName);
+      cfg.nyc = {
+         "include": [],
+         "reportDir": path.dirname(cfg.jsonCoverageReport)
+      };
+      let nycPath = path.relative(process.cwd(), this._realResources || this._resources);
+      testModules.forEach((name) => {
+         const moduleCfg = this._modulesMap.get(name);
+         if (moduleCfg && moduleCfg.depends) {
+             moduleCfg.depends.forEach((dependModuleName) => {
+                 cfg.nyc.include.push(path.join(nycPath, dependModuleName, '**', '*.js'))
+             });
+         }
+      });
       this._testReports.set(fullName, cfg.report);
       return cfg;
    }
@@ -283,9 +299,9 @@ class Test extends Base {
                path: pathToConfig,
                isBrowser: false
             });
-
+            const coverage = this._coverage ? ' --coverage' : '';
             await this._shell.execute(
-               `node node_modules/saby-units/cli.js --isolated --report --config=${pathToConfig}`,
+               `node node_modules/saby-units/cli.js --isolated${coverage} --report --config=${pathToConfig}`,
                process.cwd(),
                {
                   processName: `test node ${moduleName}`,
@@ -309,10 +325,11 @@ class Test extends Base {
       if (moduleCfg.testInBrowser) {
          const configPath = _private.getPathToTestConfig(moduleName, true);
          let cmd = '';
+         const coverage = this._coverage ? ' --coverage' : '';
          if (this._server) {
             cmd = `node node_modules/saby-units/cli/server.js --config=${configPath}`;
          } else {
-            cmd = `node node_modules/saby-units/cli.js --browser --report --config=${configPath}`;
+            cmd = `node node_modules/saby-units/cli.js --browser${coverage} --report --config=${configPath}`;
          }
          logger.log('Запуск тестов в браузере', moduleName);
          await this._executeBrowserTestCmd(cmd, moduleName, configPath);
