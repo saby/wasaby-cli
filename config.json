@@ -21,7 +21,7 @@
          "unitInBrowser": true
       },
       "wasaby-controls": {
-         "url": "https://git.sbis.ru/sbis/wasaby-controls.git"
+         "url": "https://platform-git.sbis.ru/saby/wasaby-controls.git"
       },
       "rmi": {
          "url": "https://git.sbis.ru/sbis/rmi.git",
