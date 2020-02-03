@@ -6,7 +6,7 @@ const ModulesMap = require('./util/modulesMap');
 const Base = require('./base');
 const Sdk = require('./util/sdk');
 const Project = require('./xml/project');
-
+const fsUtil = require('./util/fs');
 const builderConfigName = 'builderConfig.json';
 const builderBaseConfig = '../builderConfig.base.json';
 
@@ -94,7 +94,7 @@ class Build extends Base {
          uiModules.forEach((item) => {
             if (this._modulesMap.has(item.$.name)) {
                const cfg = this._modulesMap.get(item.$.name);
-               item.$.url = path.relative(dirName, cfg.s3mod);
+               item.$.url = fsUtil.relative(dirName, cfg.s3mod);
                cfg.srv = true;
                this._modulesMap.set(cfg.name, cfg);
             }
@@ -172,7 +172,7 @@ class Build extends Base {
     * @private
     */
    _tslibInstall() {
-      const tslib = path.relative(process.cwd(), path.join(this._modulesMap.getRepositoryPath('sbis3-ws'), '/WS.Core/ext/tslib.js'));
+      const tslib = fsUtil.relative(process.cwd(), path.join(this._modulesMap.getRepositoryPath('sbis3-ws'), '/WS.Core/ext/tslib.js'));
       logger.log(tslib, 'tslib_path');
       return this._shell.execute(
          `node node_modules/saby-typescript/cli/install.js --tslib=${tslib}`,
