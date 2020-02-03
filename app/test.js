@@ -8,6 +8,7 @@ const path = require('path');
 const pMap = require('p-map');
 const Base = require('./base');
 const getPort = require('./net/getPort');
+const fsUtil = require('./util/fs');
 
 const BROWSER_SUFFIX = '_browser';
 const NODE_SUFFIX = '_node';
@@ -66,7 +67,7 @@ const _private = {
     */
    getPathToTestConfig: (repName, isBrowser) => {
       const browser = isBrowser ? '_browser' : '';
-      return path.relative(
+      return fsUtil.relative(
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `testConfig_${repName}${browser}.json`))
       );
@@ -171,12 +172,12 @@ class Test extends Base {
       const testConfig = require('../testConfig.base.json');
       let cfg = { ...testConfig };
       const fullName = name + (suffix || '');
-      let workspace = path.relative(process.cwd(), this._workspace);
+      let workspace = fsUtil.relative(process.cwd(), this._workspace);
       workspace = workspace ? workspace : '.';
       cfg.url = { ...cfg.url };
       cfg.url.port = await getPort();
       cfg.tests = testModules;
-      cfg.root = path.relative(process.cwd(), this._resources);
+      cfg.root = fsUtil.relative(process.cwd(), this._resources);
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.jsonCoverageReport = cfg.jsonCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.report = this.getReportPath(fullName);
@@ -190,7 +191,7 @@ class Test extends Base {
     * @returns {string}
     */
    getReportPath(fullName) {
-      const workspace = path.relative(process.cwd(), this._workspace);
+      const workspace = fsUtil.relative(process.cwd(), this._workspace);
       return REPORT_PATH.replace('{module}', fullName)
          .replace('{workspace}', workspace ? workspace : '.');
    }
