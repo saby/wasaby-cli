@@ -38,6 +38,7 @@ class sdk {
    constructor(cfg) {
       this._rc = cfg.rc;
       this._workspace = cfg.workspace;
+      this._pathToJinnee = cfg.pathToJinnee;
       this._shell = new Shell();
    }
 
