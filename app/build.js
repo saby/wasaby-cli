@@ -27,6 +27,7 @@ class Build extends Base {
       this._builderCache = cfg.builderCache;
       this._workspace = cfg.workspace;
       this._projectPath = cfg.projectPath;
+      this._pathToJinnee = cfg.pathToJinnee;
       this._builderCfg = path.join(process.cwd(), 'builderConfig.json');
       this._modulesMap = new ModulesMap({
          reposConfig: this._reposConfig,
@@ -141,7 +142,8 @@ class Build extends Base {
       const logs = path.join(this._workDir, 'logs');
       const sdk = new Sdk({
          rc: this._rc,
-         workspace: this._workspace
+         workspace: this._workspace,
+         pathToJinnee: this._pathToJinnee
       });
       const project = new Project({
          file:  this._projectPath

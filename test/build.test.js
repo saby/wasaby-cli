@@ -2,12 +2,20 @@ const chai = require('chai');
 const sinon = require('sinon');
 const fs = require('fs-extra');
 const Build = require('../app/build');
+const Project = require('../app/xml/project');
+const Shell = require('../app/util/shell');
 
 
 let build;
 
 describe('Build', () => {
    let stubExecute;
+
+   before(() => {
+      process.env.SDK = process.env.SDK || '';
+      process.env.SBISPlatformSDK_101000 = process.env.SBISPlatformSDK_101000 || '';
+   });
+
    beforeEach(() => {
       build = new Build({
          testRep: ['test1'],
@@ -17,10 +25,11 @@ describe('Build', () => {
             'sbis3-ws': {}
          },
          store: '',
+         workDir: '',
          workspace: 'application',
          rc: 'rc-10.1000'
       });
-      stubExecute = sinon.stub(build._shell, 'execute').callsFake(() => undefined);
+      stubExecute = sinon.stub(Shell.prototype, 'execute').callsFake(() => undefined);
    });
 
    afterEach(() => {
@@ -214,5 +223,36 @@ describe('Build', () => {
          });
       });
    });
+
+
+   describe('._initWithJinnee()', () => {
+      let stubProjectSrv, stubProjectDeploy, stubSdk, stubExists, stubstatSync;
+      beforeEach(() => {
+         stubProjectSrv = sinon.stub(Project.prototype, 'getServices').callsFake(() => []);
+         stubProjectDeploy = sinon.stub(Project.prototype, 'getDeploy').callsFake(() => {});
+         sinon.stub(build, '_prepareDeployCfg').callsFake(() => {});
+         stubSdk = sinon.stub(process.env, 'SBISPlatformSDK_101000').value('path/to/sdk');
+         stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
+         stubstatSync = sinon.stub(fs, 'statSync').callsFake(() => ({isFile: () => false}));
+      });
+      afterEach(() => {
+         stubProjectSrv.restore();
+         stubProjectDeploy.restore();
+         stubSdk.restore();
+         stubExists.restore();
+         stubstatSync.restore();
+      });
+
+      it('should run jinnee from pathToJinnee', (done) => {
+         sinon.stub(build, '_pathToJinnee').value('path/to/jinnee');
+         stubExecute.callsFake((cmd, path) => {
+            if (path === 'path/to/jinnee') {
+               done();
+            }
+         });
+         build._initWithJinnee();
+      });
+   });
+
 
 });
