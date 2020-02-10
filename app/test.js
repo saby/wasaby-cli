@@ -93,6 +93,7 @@ class Test extends Base {
       this._isUseDiff = cfg.diff;
       this._coverage = cfg.coverage;
       this._realResources = cfg.realResources;
+      this._ignoreLeaks = !cfg.checkLeaks;
       this._modulesMap = new ModulesMap({
          reposConfig: cfg.reposConfig,
          store: cfg.store,
@@ -175,7 +176,7 @@ class Test extends Base {
       let cfg = { ...testConfig };
       const fullName = name + (suffix || '');
       let workspace = fsUtil.relative(process.cwd(), this._workspace);
-      testModules = typeof testModules === 'Array' ? testModules : [testModules]
+      testModules = typeof testModules === 'Array' ? testModules : [testModules];
       workspace = workspace ? workspace : '.';
       cfg.url = { ...cfg.url };
       cfg.url.port = await getPort();
@@ -184,6 +185,7 @@ class Test extends Base {
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.jsonCoverageReport = cfg.jsonCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.report = this.getReportPath(fullName);
+      cfg.ignoreLeaks = this._ignoreLeaks;
       cfg.nyc = {
          "include": [],
          "reportDir": path.dirname(cfg.jsonCoverageReport)

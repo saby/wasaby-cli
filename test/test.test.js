@@ -292,6 +292,21 @@ describe('Test', () => {
       });
    });
 
+   describe('._getTestConfig()', function () {
+      it('should return config' , async () => {
+         let cfg = await test._getTestConfig();
+         let base = require('../testConfig.base.json');
+         for (let prop of Object.keys(base)) {
+            chai.expect(cfg).to.have.property(prop);
+         }
+      });
+
+      it('should set checkLeaks in config' , async () => {
+         sinon.stub(test, '_ignoreLeaks').value(true);
+         let cfg = await test._getTestConfig();
+         chai.expect(cfg.ignoreLeaks).is.true;
+      });
+   });
    describe('._setDiff()', function () {
       let spySetDiff;
       beforeEach(() => {
@@ -307,5 +322,5 @@ describe('Test', () => {
          test._setDiff();
          chai.expect(spySetDiff.calledWith('test1')).to.be.true;
       });
-   })
+   });
 });
