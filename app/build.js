@@ -34,7 +34,8 @@ class Build extends Base {
          store: cfg.store,
          testRep: cfg.testRep,
          workDir: this._workDir,
-         only: cfg.only
+         only: cfg.only,
+         reBuildMap: true
       });
       if (cfg.builderBaseConfig) {
          this._builderBaseConfig = path.normalize(path.join(process.cwd(), cfg.builderBaseConfig));
@@ -60,7 +61,8 @@ class Build extends Base {
          await this._linkFolder();
          logger.log('Подготовка тестов завершена успешно');
       } catch (e) {
-         throw new Error(`Сборка ресурсов завершена с ошибкой: ${e}`);
+         e.message = `Сборка ресурсов завершена с ошибкой: ${e.message}`;
+         throw e;
       }
    }
 

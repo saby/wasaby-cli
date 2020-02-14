@@ -2,21 +2,24 @@ const path = require('path');
 const pMap = require('p-map');
 const xml = require('../xml/xml');
 const walkDir = require('./walkDir');
-
+const MAP_FILE_NAME = path.join('resources', 'modulesMap.json');
+const fs = require('fs-extra');
+const CDN_REP_NAME = 'cdn';
 /**
  * Карта модулей s3mod, из всех репозиториев
  * @class ModulesMap
  * @author Ганшин Я.О
  */
+
 class ModulesMap {
    constructor(cfg) {
       this._reposConfig = cfg.reposConfig;
       this._store = cfg.store;
       this._testRep = cfg.testRep;
       this._modulesMap = new Map();
-      this._testModulesMap = new Map();
       this._workDir = cfg.workDir;
       this._only = cfg.only;
+      this._reBuildMap = cfg.reBuildMap;
    }
 
    /**
@@ -63,7 +66,7 @@ class ModulesMap {
       let result = modules.slice();
       this._modulesMap.forEach((cfg) => {
          if (
-            cfg.forTests && !result.includes(cfg.name) &&
+            !result.includes(cfg.name) &&
             cfg.depends.some(dependName => result.includes(dependName))
          ) {
             result.push(cfg.name);
@@ -106,15 +109,15 @@ class ModulesMap {
       let testList = [];
       if (this._only) {
          this._testRep.forEach((name) => {
-            testList = testList.concat(this.getTestModules(name));
+            testList = testList.concat(this.getTestModulesByRep(name));
          });
       } else if (!this._testRep.includes('all')) {
          this._testRep.forEach((testRep) => {
             const modules = this.getParentModules(this.getTestModulesWithDepends(testRep));
-            testList = testList.concat(this.getTestModules(testRep));
+            testList = testList.concat(this.getTestModulesByRep(testRep));
             modules.forEach((name) => {
                const cfg = this._modulesMap.get(name);
-               this.getTestModules(cfg.rep).forEach((testModule) => {
+               this.getTestModulesByRep(cfg.rep).forEach((testModule) => {
                   if (!testList.includes(testModule)) {
                      testList.push(testModule);
                   }
@@ -122,9 +125,7 @@ class ModulesMap {
             });
          });
       } else {
-         this._testModulesMap.forEach((modules) => {
-            testList = testList.concat(modules);
-         });
+         testList = this.getTestModulesByRep('all');
       }
       this._testList = testList;
       return this._testList;
@@ -136,12 +137,10 @@ class ModulesMap {
     */
    getTestModulesWithDepends(name) {
       let result = [];
-      const modules = this._testModulesMap.get(name) || [];
+      const modules = this.getTestModulesByRep(name) || [];
       modules.forEach((moduleName) => {
          const cfg = this._modulesMap.get(moduleName);
-         result = result.concat(cfg.depends || []).filter(depend => (
-            !!this._modulesMap.get(depend).forTests
-         ));
+         result = result.concat(cfg.depends || []);
          result.push(moduleName);
       });
       return result;
@@ -152,23 +151,17 @@ class ModulesMap {
     * @param {String} repName название репозитория
     * @return {Array}
     */
-   getTestModules(repName) {
-      return this._testModulesMap.get(repName) || [];
-   }
-
-   /**
-    * Возвращает список модулей по репозиторию
-    * @param {String} repName название репозитория
-    * @return {Array}
-    */
-   getModulesByRep(repName) {
-      const moduels = [];
+   getTestModulesByRep(repName) {
+      let testModules = [];
       this._modulesMap.forEach((cfg) => {
-         if (cfg.rep === repName) {
-            moduels.push(cfg.name);
+         if (
+            (cfg.rep === repName || repName === 'all') &&
+            cfg.unitTest
+         ) {
+            testModules.push(cfg.name);
          }
       });
-      return moduels;
+      return testModules;
    }
 
    /**
@@ -176,9 +169,13 @@ class ModulesMap {
     * @return {Promise<void>}
     */
    async build() {
-      const modules = this._findModulesInStore();
-      await this._addToModulesMap(modules);
-      this._markModulesForTest();
+      if (this._reBuildMap) {
+         const modules = this._findModulesInStore();
+         await this._addToModulesMap(modules);
+         await this._saveMap();
+      } else {
+         await this._loadMap();
+      }
    }
 
    /**
@@ -235,13 +232,9 @@ class ModulesMap {
                }
 
                if (xmlObj.ui_module.unit_test) {
-                  const testModules = this._testModulesMap.get(cfg.rep) || [];
                   const repCfg = this._reposConfig[cfg.rep];
                   const onlyNode = xmlObj.ui_module.unit_test[0].$ && xmlObj.ui_module.unit_test[0].$.onlyNode;
-
-                  testModules.push(cfg.name);
-
-                  this._testModulesMap.set(cfg.rep, testModules);
+                  cfg.unitTest = true;
                   cfg.testInBrowser = repCfg.unitInBrowser && !(onlyNode);
                }
 
@@ -254,36 +247,62 @@ class ModulesMap {
    }
 
    /**
-    * Помечает модули используемые для тестов
-    * @private
-    */
-   _markModulesForTest() {
-      Object.keys(this._reposConfig).forEach((name) => {
-         if (this._testModulesMap.has(name)) {
-            const modules = this._testModulesMap.get(name);
-            modules.forEach((testModuleName) => {
-               const testModuleCfg = this._modulesMap.get(testModuleName);
-               testModuleCfg.depends.forEach((moduleName) => {
-                  const cfg = this._modulesMap.get(moduleName);
-                  if (cfg && cfg.rep === name) {
-                     cfg.forTests = true;
-                     this._modulesMap.set(moduleName, cfg);
-                  }
-               });
-               testModuleCfg.forTests = true;
-               this._modulesMap.set(testModuleName, testModuleCfg);
-            });
-         }
-      });
-   }
-
-   /**
     * Возвращает путь до репозитория
     * @param {String} repName название репозитория
     * @return {string}
     */
    getRepositoryPath(repName) {
       return this._reposConfig[repName].path || path.join(this._store, repName);
+   }
+
+   /**
+    * Возвращает список репозиториев
+    * @returns {Set<String>}
+    */
+   getTestRepos() {
+      const modules = this.getChildModules(this.getTestList());
+      const repos = new Set([CDN_REP_NAME]);
+      modules.forEach((module) => {
+         const moduleCfg = this._modulesMap.get(module);
+         repos.add(moduleCfg.rep);
+      });
+      return repos;
+   }
+   /**
+    * Загружает карту модулей из файла
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _loadMap() {
+      let mapObject = await fs.readJSON(path.join(process.cwd(), MAP_FILE_NAME));
+      for (let key of Object.keys(mapObject)) {
+         let mapObjectValue = mapObject[key];
+         mapObjectValue.path = path.join(this._store, mapObjectValue.path);
+         mapObjectValue.s3mod = path.join(this._store, mapObjectValue.s3mod);
+         this._modulesMap.set(key, mapObjectValue);
+      }
+   }
+
+   /**
+    * Сохраняет карту модулей в файл
+    * @private
+    */
+   async _saveMap() {
+      let mapObject = {};
+      const mapPath = path.join(process.cwd(), MAP_FILE_NAME);
+
+      if (fs.existsSync(mapPath)) {
+         mapObject = await fs.readJSON(mapPath);
+      }
+
+      this._modulesMap.forEach((value, key) => {
+         mapObject[key] = {...value, ...{
+            path: path.relative(this._store, value.path),
+            s3mod: path.relative(this._store, value.s3mod)
+         }};
+      });
+
+      await fs.writeJSON(mapPath, mapObject);
    }
 }
 
