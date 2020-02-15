@@ -78,6 +78,9 @@ describe('Build', () => {
             getTestList: () => {
                return ['test1', 'test2'];
             },
+            getModulesByRep: (name) => {
+               return [name];
+            },
             getChildModules: () => {
                return [];
             },

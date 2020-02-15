@@ -37,7 +37,7 @@
         для другого репозитория, то передаем парамет --rep с названием (параметр name в package.json нужного репозитория, 
         например для котролов это sbis3-control) 
         
-            node node_modules/test-cli/cli.js --tasks=initStore,build  --rep=saby-types,sbis3-controls  --builderConfig=./buildTemplate.json --only
+             node node_modules/test-cli/cli.js --tasks=initStore,build  --rep=saby-types,sbis3-controls  --builderConfig=./buildTemplate.json --only
         
     Запуск тестов
         Для запуска всех тестов по текущему репозиторию, результаты, можно найти в папке application/artefacts

@@ -20,7 +20,7 @@ describe('modulesMap', () => {
       stubfsAppend.restore();
    });
    describe('._findModulesInStore()', () => {
-      let stubfs, stubStat, stubExists;
+      let stubfs, stubStat;
       beforeEach(() => {
          stubfs = sinon.stub(fs, 'readdirSync').callsFake((path) => {
             if (path.includes('tttModule')) {
@@ -28,7 +28,7 @@ describe('modulesMap', () => {
             }
             return ['tttModule'];
          });
-         stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
+
          stubStat = sinon.stub(fs, 'lstatSync').callsFake((path) => {
             return {
                isDirectory: () => /.*tttModule$/.test(path),
@@ -55,7 +55,20 @@ describe('modulesMap', () => {
       afterEach(() => {
          stubfs.restore();
          stubStat.restore();
-         stubExists.restore();
+      });
+   });
+
+   describe('.getModulesByRep()', () => {
+      let stubFind;
+      beforeEach(() => {
+         stubFind = sinon.stub(modulesMap, '_modulesMap').value(new Map([['test11', {name: 'test11', rep: 'test1'}]]));
+
+      });
+      it('should concat modules from config and repository', () => {
+         return chai.expect(modulesMap.getModulesByRep('test1')).to.deep.equal(['test11']);
+      });
+      afterEach(() => {
+         stubFind.restore();
       });
    });
 
@@ -71,15 +84,26 @@ describe('modulesMap', () => {
             },
             test3: {}
          });
-
+         stubModulesMap = sinon.stub(modulesMap, '_testModulesMap').value(new Map([
+            ['test1', ['test11']],
+            ['test2', ['test22']],
+            ['test3', ['test33']]
+         ]));
          stubModulesMap = sinon.stub(modulesMap, '_modulesMap').value(
             new Map([
-               ['test11', {name: 'test11', rep: 'test1', depends: ['test22']}],
-               ['test22', {name: 'test22', rep: 'test2', depends: []}],
-               ['test33', {name: 'test33', rep: 'test3', depends: []}],
-               ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11'], unitTest: true}],
-               ['test_test2', {name: 'test_test2', rep: 'test2', depends: ['test22'], unitTest: true}],
-               ['test_test3', {name: 'test_test3', rep: 'test3', depends: ['test33'], unitTest: true}]
+               ['test11', {name: 'test11', rep: 'test1', depends: ['test22'], forTests: true}],
+               ['test22', {name: 'test22', rep: 'test2', depends: [], forTests: true}],
+               ['test33', {name: 'test33', rep: 'test3', depends: [], forTests: true}],
+               ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11']}],
+               ['test_test2', {name: 'test_test2', rep: 'test2', depends: ['test22']}],
+               ['test_test3', {name: 'test_test3', rep: 'test3', depends: ['test33']}]
+            ])
+         );
+         sinon.stub(modulesMap, '_testModulesMap').value(
+            new Map([
+               ['test1', ['test_test1']],
+               ['test2', ['test_test2']],
+               ['test3', ['test_test3']]
             ])
          );
       });
@@ -142,68 +166,6 @@ describe('modulesMap', () => {
       });
    });
 
-   describe('_loadMap()', () => {
-      let fsRead;
-      const mapObj = {
-         test11: {name: 'test11', rep: 'test1', depends: [], path: 'test1', s3mod: 'test11'}
-      };
-
-      beforeEach(() => {
-         fsRead = sinon.stub(fs, 'readJSON').callsFake(() => mapObj);
-      });
-
-      it('should load map', () => {
-         return modulesMap._loadMap().then(() => {
-            chai.expect(mapObj.test11).to.deep.equal(modulesMap.get('test11'));
-         });
-      });
-
-      afterEach(() => {
-         fsRead.restore();
-      });
-   });
-
-
-   describe('_saveMap()', () => {
-      let fsExists, fsWrite, fsRead;
-      const mapObj = {
-         test21: {name: 'test21', rep: 'test2', depends: [], path: 'test2', s3mod: 'test21'}
-      };
-      const test11 = {name: 'test11', rep: 'test1', depends: [], path: 'test1', s3mod: 'test11'};
-      beforeEach(() => {
-         sinon.stub(modulesMap, '_modulesMap').value(new Map([
-            ['test11', test11]
-         ]));
-         fsExists = sinon.stub(fs, 'existsSync').callsFake(() => false);
-         fsRead = sinon.stub(fs, 'readJSON').callsFake(() => mapObj);
-         fsWrite = sinon.stub(fs, 'writeJSON').callsFake(() => undefined);
-      });
-
-      it('should save map', (done) => {
-         fsWrite.callsFake((file, object) => {
-            chai.expect(object.test11).to.deep.equal(test11);
-            done();
-         });
-         modulesMap._saveMap();
-      });
-
-      it('should merge current map and map that have been existsted in file', (done) => {
-         fsWrite.callsFake((file, object) => {
-            chai.expect(object.test11).to.deep.equal(test11);
-            chai.expect(object.test21).to.deep.equal(mapObj.test21);
-            done();
-         });
-         fsExists.callsFake(() => true);
-         modulesMap._saveMap();
-      });
-
-      afterEach(() => {
-         fsExists.restore();
-         fsWrite.restore();
-         fsRead.restore();
-      });
-   });
-
    describe(' _getChildModules()', () => {
       let stubModulesMap;
       beforeEach(() => {
@@ -239,6 +201,44 @@ describe('modulesMap', () => {
 
       afterEach(() => {
          stubModulesMap.restore();
+      });
+   });
+
+   describe('_markModulesForTest()',() => {
+      let stubModulesMap;
+      let stubTestModulesMap;
+      beforeEach(() => {
+         stubModulesMap = sinon.stub(modulesMap, '_modulesMap').value(
+             new Map([
+                ['testModule', {name: 'testModule', rep: 'test1', depends: ['justModule']}],
+                ['justModule', {name: 'justModule', rep: 'test1', depends: []}],
+                ['independedModule', {name: 'independedModule', rep: 'test1', depends: []}]
+             ])
+         );
+         stubTestModulesMap = sinon.stub(modulesMap, '_testModulesMap').value(new Map([
+            ['test1', ['testModule']]
+         ]));
+      });
+
+      it('should mark module as for test', () => {
+         modulesMap._markModulesForTest();
+         chai.expect(modulesMap.get('justModule').forTests).to.be.true;
+      });
+
+
+      it('should not mark module as for test when module has not been depended on test module', () => {
+         modulesMap._markModulesForTest();
+         chai.expect(modulesMap.get('independedModule').forTests).to.be.undefined;
+      });
+
+      it('should mark module test module', () => {
+         modulesMap._markModulesForTest();
+         chai.expect(modulesMap.get('testModule').forTests).to.be.true;
+      });
+
+      afterEach(() => {
+         stubModulesMap.restore();
+         stubTestModulesMap.restore();
       });
    });
 });

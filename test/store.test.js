@@ -203,7 +203,7 @@ describe('Store', () => {
    });
 
    describe('.run()', () => {
-      let stubmkdirs, stubRepos, initRepStore, rmdirSync, stubRepConf, stub;
+      let stubmkdirs, stubRepos, initRepStore, rmdirSync, stubRepConf;
       it('should make store dir', (done) => {
          let makeDir;
          stubmkdirs = sinon.stub(fs, 'mkdirs').callsFake((path) => {
@@ -216,6 +216,25 @@ describe('Store', () => {
             chai.expect(makeDir).to.equal(store._store);
             done();
          });
+      });
+
+      it('should checkout brunch twice', (done) => {
+         let count = 1;
+         rmdirSync = sinon.stub(fs, 'removeSync').callsFake(() => undefined);
+         stubRepConf = sinon.stub(store, '_reposConfig').value({
+            test: {}
+         });
+         initRepStore = sinon.stub(store, 'initRep').callsFake(() => {
+            if (count++ === 1) {
+               const e = new Error('error');
+               e.code = 101;
+               return Promise.reject(e);
+            } else {
+               done();
+               return Promise.resolve();
+            }
+         });
+         store.run();
       });
 
       afterEach(() => {

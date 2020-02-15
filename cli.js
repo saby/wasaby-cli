@@ -90,8 +90,7 @@ class Cli {
          rc: this._rc,
          reposConfig: this._reposConfig,
          store: this._store,
-         testRep: this._testRep,
-         only: !!this._argvOptions.only
+         testRep: this._testRep
       });
 
       await store.run();

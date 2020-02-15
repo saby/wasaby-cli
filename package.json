@@ -1,20 +1,15 @@
 {
    "name": "test-cli",
    "version": "20.3000.0",
-   "description": "Build and run unit tests for wasaby",
+   "description": "",
+   "main": "cli.js",
    "scripts": {
       "test": "mocha",
       "test:coverage": "nyc --reporter=html npm run test",
       "install-selenium": "npm install selenium-standalone@6.14.x && node node_modules/selenium-standalone/bin/selenium-standalone install",
       "tslint": "tslint -q app/**/*.js"
    },
-   "repository": {
-      "type": "git",
-      "url": "git@git.sbis.ru:sbis/test-cli.git"
-   },
-   "bin": {
-      "test-cli": "./cli.js"
-   },
+   "author": "",
    "dependencies": {
       "body-parser": "^1.18.3",
       "cookie-parser": "^1.4.3",
