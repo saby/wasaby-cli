@@ -1,5 +1,7 @@
 const path = require('path');
 const xml = require('./xml');
+const fsUtil = require('../util/fs');
+const fs = require('fs-extra');
 
 /**
  * Класс для работы c файлом проекта .s3cld
@@ -9,6 +11,9 @@ const xml = require('./xml');
 class Project {
    constructor(cfg) {
       this.file = cfg.file;
+      this._modulesMap = cfg.modulesMap;
+      this._workDir = cfg.workDir;
+      this._builderCache = cfg.builderCache;
    }
 
    /**
@@ -60,6 +65,99 @@ class Project {
          });
       }
       return this._srv;
+   }
+
+   /**
+    * Заменяет пути в srv
+    * @param {String} srvPath Путь до srv файла
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _prepareSrv(srvPath) {
+      if (fs.existsSync(srvPath)) {
+         const srv = await xml.readXmlFile(srvPath);
+         const dirName = path.dirname(srvPath);
+         const uiModules = srv.service.items[0].ui_module || [];
+         uiModules.forEach((item) => {
+            if (this._modulesMap.has(item.$.name)) {
+               const cfg = this._modulesMap.get(item.$.name);
+               item.$.url = fsUtil.relative(dirName, cfg.s3mod);
+               cfg.srv = true;
+               this._modulesMap.set(cfg.name, cfg);
+            }
+         });
+         if (srv.service.parent) {
+            await Promise.all(srv.service.parent.map(item => (
+               this._prepareSrv(path.normalize(path.join(dirName, item.$.path)))
+            )));
+         }
+         xml.writeXmlFile(srvPath, srv);
+      }
+   }
+
+   async _getModulesFromSrv(srvPath) {
+      let modules = [];
+      if (fs.existsSync(srvPath)) {
+         const srv = await xml.readXmlFile(srvPath);
+         const uiModules = srv.service.items[0].ui_module || [];
+         uiModules.forEach((item) => {
+            modules.push(item.$.name);
+         });
+         const dirName = path.dirname(srvPath);
+         if (srv.service.parent) {
+            const parentModules = await Promise.all(srv.service.parent.map(item => (
+               this._getModulesFromSrv(path.normalize(path.join(dirName, item.$.path)))
+            )));
+            modules = modules.concat(parentModules.flat());
+         }
+      }
+      return modules;
+   }
+
+   /**
+    * Возвращает список модулей из проекта
+    * @returns {Promise<Set<String>>>}
+    */
+   async getProjectModules() {
+      const srvPaths = await this.getServices();
+      const servicesModules = await Promise.all(srvPaths.map((srv) => this._getModulesFromSrv(srv)));
+      return new Set(servicesModules.flat());
+   }
+
+   /**
+    * Заменяет константы в .deploy
+    * @param {String} filePath Путь до .deploy файлаы
+    * @private
+    */
+   async _prepareDeployCfg(filePath) {
+      let deploy = await xml.readXmlFile(filePath);
+      const business_logic = deploy.distribution_deploy_schema.site[0].business_logic;
+      const static_content = deploy.distribution_deploy_schema.site[0].static_content;
+
+      business_logic[0].$.target_path = this._workDir;
+      static_content[0].$.target_path = this._workDir;
+
+      deploy.distribution_deploy_schema.$.json_cache = this._builderCache;
+
+      if (process.platform === 'win32') {
+         deploy.distribution_deploy_schema.$.compiler = 'clang';
+         deploy.distribution_deploy_schema.$.architecture = 'i686';
+         deploy.distribution_deploy_schema.$.os = 'windows';
+      }
+
+      await xml.writeXmlFile(filePath, deploy);
+   }
+
+   /**
+    * Обновляет пути в файлайх конфигурации проекта
+    * @returns {Promise<void>}
+    */
+   async updatePaths() {
+      const srvPaths = await this.getServices();
+      const deploy = await this.getDeploy();
+
+      await Promise.all(srvPaths.map((srv) => this._prepareSrv(srv)));
+      await this._prepareDeployCfg(deploy);
    }
 }
 

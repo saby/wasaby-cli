@@ -4,6 +4,7 @@ const logger = require('./util/logger');
 const Base = require('./base');
 const Git = require('./util/git');
 const ModulesMap = require('./util/modulesMap');
+const Project = require('./xml/project');
 
 /**
  * Класс отвечающий за подготовку репозиториев для тестирования
@@ -19,6 +20,7 @@ class Store extends Base {
       this._reposConfig = cfg.reposConfig;
       this._rc = cfg.rc;
       this._testRep = cfg.testRep;
+      this._projectPath = cfg.projectPath;
       this._modulesMap = new ModulesMap({
          reposConfig: this._reposConfig,
          store: cfg.store,
@@ -38,7 +40,7 @@ class Store extends Base {
          await this._modulesMap.build();
          await fs.mkdirs(this._store);
          const promises = [];
-         for (const rep of this._modulesMap.getTestRepos()) {
+         for (const rep of (await this._getReposList())) {
             promises.push(this.initRep(rep));
          }
          await Promise.all(promises);
@@ -119,6 +121,55 @@ class Store extends Base {
             throw new Error(`Ошибка при клонировании репозитория ${name}: ${err}`);
          }
       }
+   }
+
+   /**
+    * Возвращает список репозиториев которые надо обновить
+    * @returns {Set<String>}
+    * @private
+    */
+   async _getReposList() {
+      const reposFromMap = this._modulesMap.getTestRepos();
+      const reposFromArgv = this._getReposFromArgv();
+      const reposFromProject = await this._getProjectRepos();
+      return new Set([...reposFromMap, ...reposFromArgv, ...reposFromProject]);
+   }
+
+   /**
+    * Возвращает репозитории переданные в аргуметах командной строки
+    * @returns {Set<String>}
+    * @private
+    */
+   _getReposFromArgv() {
+      const repos = new Set();
+      for (const name of Object.keys(this._reposConfig)) {
+         if (this._argvOptions.hasOwnProperty(name)) {
+            repos.add(name);
+         }
+      }
+      return repos;
+   }
+
+   /**
+    *
+    * @returns {Set<String>}
+    * @private
+    */
+   async _getProjectRepos() {
+      const repos = new Set();
+      if (this._projectPath) {
+         const project = new Project({
+            file: this._projectPath
+         });
+         const modules = await project.getProjectModules();
+         modules.forEach(name => {
+            if (this._modulesMap.has(name)) {
+               const cfg = this._modulesMap.get(name);
+               repos.add(cfg.rep);
+            }
+         });
+      }
+      return repos;
    }
 }
 
