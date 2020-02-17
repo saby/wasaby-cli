@@ -32,10 +32,11 @@ class Cli {
       logger.logFile = path.join(this._workspace, LOG_FOLDER, `test-cli-${this.tasks.join('_')}.log`);
       if (this._argvOptions.projectDir || this._argvOptions.project) {
          this._buildTools = 'jinnee';
-
          // если сборка идет джином то исходники лежат в  intest-ps/ui/resources
          this._resources = path.join(this._workDir, 'intest-ps', 'ui', 'resources');
          this._realResources = path.join(this._workDir, 'build-ui', 'resources');
+         this._projectPath = this._argvOptions.projectDir ? path.join(this._argvOptions.projectDir, 'InTest.s3cld') : '';
+         this._projectPath = this._argvOptions.project || this._projectPath;
       } else {
          this._buildTools = 'builder';
          this._resources = this._workDir;
@@ -64,10 +65,10 @@ class Cli {
 
    async build() {
       //todo удалить как переведут сборки
-      const projectDir = this._argvOptions.projectDir ? path.join(this._argvOptions.projectDir, 'InTest.s3cld') : '';
+
       const build = new Build({
          builderCache: this._argvOptions.builderCache || path.join(this._workDir, 'builder-json-cache'),
-         projectPath: this._argvOptions.project || projectDir,
+         projectPath: this._projectPath,
          rc: this._rc,
          reposConfig: this._reposConfig,
          resources: this._resources,
@@ -90,7 +91,9 @@ class Cli {
          rc: this._rc,
          reposConfig: this._reposConfig,
          store: this._store,
-         testRep: this._testRep
+         testRep: this._testRep,
+         only: !!this._argvOptions.only,
+         projectPath: this._projectPath
       });
 
       await store.run();
@@ -110,8 +113,7 @@ class Cli {
          server: !!this._argvOptions.server,
          rc: this._rc,
          diff: this._argvOptions.diff,
-         coverage: this._argvOptions.coverage,
-         checkLeaks: this._argvOptions.checkLeaks
+         coverage: this._argvOptions.coverage
       });
 
       await test.run();

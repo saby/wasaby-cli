@@ -1,12 +1,12 @@
 const fs = require('fs-extra');
 const path = require('path');
 const logger = require('./util/logger');
-const xml = require('./xml/xml');
 const ModulesMap = require('./util/modulesMap');
 const Base = require('./base');
 const Sdk = require('./util/sdk');
 const Project = require('./xml/project');
 const fsUtil = require('./util/fs');
+
 const builderConfigName = 'builderConfig.json';
 const builderBaseConfig = '../builderConfig.base.json';
 
@@ -34,7 +34,8 @@ class Build extends Base {
          store: cfg.store,
          testRep: cfg.testRep,
          workDir: this._workDir,
-         only: cfg.only
+         only: cfg.only,
+         reBuildMap: true
       });
       if (cfg.builderBaseConfig) {
          this._builderBaseConfig = path.normalize(path.join(process.cwd(), cfg.builderBaseConfig));
@@ -60,7 +61,8 @@ class Build extends Base {
          await this._linkFolder();
          logger.log('Подготовка тестов завершена успешно');
       } catch (e) {
-         throw new Error(`Сборка ресурсов завершена с ошибкой: ${e}`);
+         e.message = `Сборка ресурсов завершена с ошибкой: ${e.message}`;
+         throw e;
       }
    }
 
@@ -81,57 +83,7 @@ class Build extends Base {
       );
    }
 
-   /**
-    * Заменяет пути в srv
-    * @param {String} srvPath Путь до srv файла
-    * @returns {Promise<void>}
-    * @private
-    */
-   async _prepareSrv(srvPath) {
-      if (fs.existsSync(srvPath)) {
-         const srv = await xml.readXmlFile(srvPath);
-         const dirName = path.dirname(srvPath);
-         const uiModules = srv.service.items[0].ui_module || [];
-         uiModules.forEach((item) => {
-            if (this._modulesMap.has(item.$.name)) {
-               const cfg = this._modulesMap.get(item.$.name);
-               item.$.url = fsUtil.relative(dirName, cfg.s3mod);
-               cfg.srv = true;
-               this._modulesMap.set(cfg.name, cfg);
-            }
-         });
-         if (srv.service.parent) {
-            await Promise.all(srv.service.parent.map(item => (
-               this._prepareSrv(path.normalize(path.join(dirName, item.$.path)))
-            )));
-         }
-         xml.writeXmlFile(srvPath, srv);
-      }
-   }
 
-   /**
-    * Заменяет константы в .deploy
-    * @param {String} filePath Путь до .deploy файлаы
-    * @private
-    */
-   async _prepareDeployCfg(filePath) {
-      let deploy = await xml.readXmlFile(filePath);
-      const business_logic = deploy.distribution_deploy_schema.site[0].business_logic;
-      const static_content = deploy.distribution_deploy_schema.site[0].static_content;
-
-      business_logic[0].$.target_path = this._workDir;
-      static_content[0].$.target_path = this._workDir;
-
-      deploy.distribution_deploy_schema.$.json_cache = this._builderCache;
-
-      if (process.platform === 'win32') {
-         deploy.distribution_deploy_schema.$.compiler = 'clang';
-         deploy.distribution_deploy_schema.$.architecture = 'i686';
-         deploy.distribution_deploy_schema.$.os = 'windows';
-      }
-
-      await xml.writeXmlFile(filePath, deploy);
-   }
 
    /**
     * Запускает сборку джином
@@ -146,17 +98,17 @@ class Build extends Base {
          pathToJinnee: this._pathToJinnee
       });
       const project = new Project({
-         file:  this._projectPath
+         file:  this._projectPath,
+         modulesMap: this._modulesMap,
+         workDir: this._workDir,
+         builderCache: this._builderCache
       });
-      const srvPaths = await project.getServices();
-      const deploy = await project.getDeploy();
 
-      await Promise.all(srvPaths.map((srv) => this._prepareSrv(srv)));
-      await this._prepareDeployCfg(deploy);
+      await project.updatePaths();
 
-      await sdk.jinneeDeploy(deploy, logs, project.file);
+      await sdk.jinneeDeploy(await project.getDeploy(), logs, project.file);
+
       const testList = this._modulesMap.getTestList();
-
       if (testList.length > 0) {
          const builderOutput = path.join(this._workDir, 'builder_test');
          await this._initWithBuilder(builderOutput);

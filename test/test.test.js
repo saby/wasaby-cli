@@ -241,7 +241,7 @@ describe('Test', () => {
 
       it('should make failure report if it is empty', (done) => {
          stubRead.callsFake(() => '<testsuite tests="1"></testsuite>');
-         stubTestReports = sinon.stub(test._modulesMap, 'getTestModules').callsFake(() => ['test']);
+         stubTestReports = sinon.stub(test._modulesMap, 'getTestModulesByRep').callsFake(() => ['test']);
          stubTestError.value({test: ['error']});
          stubWrite.callsFake((name, obj) => {
             if (obj.testsuite.testcase[0]) {
@@ -272,7 +272,7 @@ describe('Test', () => {
                 'test13': {name: 'test13', rep: 'test1', depends: []}
             }[name];
          });
-         stubTestModules = sinon.stub(test._modulesMap, 'getTestModules').callsFake(() => ['test11', 'test12', 'test13']);
+         stubTestModules = sinon.stub(test._modulesMap, 'getTestModulesByRep').callsFake(() => ['test11', 'test12', 'test13']);
       });
       afterEach(() => {
          stubDiff.restore();

@@ -78,9 +78,6 @@ describe('Build', () => {
             getTestList: () => {
                return ['test1', 'test2'];
             },
-            getModulesByRep: (name) => {
-               return [name];
-            },
             getChildModules: () => {
                return [];
             },
@@ -106,110 +103,6 @@ describe('Build', () => {
       });
    });
 
-   describe('.prepareSrv()', () => {
-      const xml = require('../app/xml/xml');
-      let stubxmlRead;
-      let stubxmlWrite;
-      let stubExists;
-      let buildMap;
-
-      beforeEach(() => {
-         stubxmlRead = sinon.stub(xml, 'readXmlFile').callsFake((path) => {
-            if (path === 'test1.s3srv') {
-               return {
-                  service: {
-                     items: [
-                        {
-                           ui_module: [
-                              {
-                                 $: {
-                                    name: 'test11',
-                                    url: 'url'
-                                 }
-                              }
-                           ]
-                        }
-                     ],
-                     parent: [
-                        {
-                           $: {
-                              path: 'test2.s3srv'
-                           }
-                        }
-                     ]
-                  }
-               };
-            } else if (path === 'test2.s3srv') {
-               return {
-                  service: {
-                     items: [
-                        {
-                           ui_module: [
-                              {
-                                 $: {
-                                    name: 'test22',
-                                    url: 'url'
-                                 }
-                              }
-                           ]
-                        }
-                     ]
-                  }
-               };
-            }
-         });
-         stubxmlWrite = sinon.stub(xml, 'writeXmlFile').callsFake(() => undefined);
-         buildMap = sinon.stub(build, '_modulesMap').value(new Map([
-            [
-               'test11',
-               {
-                  name: 'test11',
-                  rep: 'test1',
-                  forTests: true,
-                  s3mod: 'test11/test11.s3mod'
-               }
-            ], [
-               'test22',
-               {
-                  name: 'test2',
-                  rep: 'test2',
-                  forTests: true,
-                  s3mod: 'test11/test22.s3mod'
-               }
-            ]
-         ]));
-         stubExists = sinon.stub(fs, 'existsSync').callsFake((name) => {
-            return name.includes('test1.s3srv');
-         });
-      });
-
-      it('should replace path to modules', (done) => {
-         build._prepareSrv('test1.s3srv');
-         stubxmlWrite.callsFake((filePath, srv) => {
-            chai.expect(srv.service.items[0].ui_module[0].$.url).to.include('test11.s3mod');
-            done();
-         });
-      });
-
-      it('should prepare parent s3srv', (done) => {
-         stubExists.callsFake(() => true);
-         build._prepareSrv('test1.s3srv');
-         stubxmlWrite.callsFake((filePath, srv) => {
-            if (filePath.includes('test2.s3srv')) {
-               chai.expect(srv.service.items[0].ui_module[0].$.url).to.include('test22.s3mod');
-               done();
-            }
-         });
-      });
-
-      afterEach(() => {
-         stubxmlRead.restore();
-         stubxmlWrite.restore();
-         stubExists.restore();
-         buildMap.restore();
-      });
-   });
-
    describe('._tslibInstall()', () => {
       it('should copy ts config', (done) => {
          let cmd;
@@ -228,9 +121,8 @@ describe('Build', () => {
    describe('._initWithJinnee()', () => {
       let stubProjectSrv, stubProjectDeploy, stubSdk, stubExists, stubstatSync;
       beforeEach(() => {
-         stubProjectSrv = sinon.stub(Project.prototype, 'getServices').callsFake(() => []);
+         stubProjectSrv = sinon.stub(Project.prototype, 'updatePaths').callsFake(() => []);
          stubProjectDeploy = sinon.stub(Project.prototype, 'getDeploy').callsFake(() => {});
-         sinon.stub(build, '_prepareDeployCfg').callsFake(() => {});
          stubSdk = sinon.stub(process.env, 'SBISPlatformSDK_101000').value('path/to/sdk');
          stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
          stubstatSync = sinon.stub(fs, 'statSync').callsFake(() => ({isFile: () => false}));
