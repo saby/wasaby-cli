@@ -23,6 +23,7 @@ class Store extends Base {
       this._rc = cfg.rc;
       this._testRep = cfg.testRep;
       this._projectPath = cfg.projectPath;
+      this._only = cfg.only;
       this._modulesMap = new ModulesMap({
          reposConfig: this._reposConfig,
          store: cfg.store,
@@ -133,10 +134,14 @@ class Store extends Base {
     * @private
     */
    async _getReposList() {
-      const reposFromMap = this._modulesMap.getTestRepos();
-      const reposFromArgv = this._getReposFromArgv();
-      const reposFromProject = await this._getProjectRepos();
-      return new Set([...reposFromMap, ...reposFromArgv, ...reposFromProject]);
+      if (this._only) {
+         const reposFromMap = this._modulesMap.getTestRepos();
+         const reposFromArgv = this._getReposFromArgv();
+         const reposFromProject = await this._getProjectRepos();
+         return new Set([... reposFromMap, ... reposFromArgv, ... reposFromProject]);
+      } else {
+         return new Set(Object.keys(this._reposConfig));
+      }
    }
 
    /**

@@ -70,6 +70,9 @@
       },
       "saby-inferno": {
          "url": "https://platform-git.sbis.ru/saby/inferno.git"
+      },
+      "saby-demo": {
+         "url": "https://git.sbis.ru/yo.ganshin/saby-demo.git"
       }
    }
 }
