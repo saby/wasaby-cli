@@ -37,9 +37,10 @@ async function run(resources, port, start) {
    global.require = require;
 
    console.log('start init');
-   require(['Env/Env', 'Core/core-init'], function (Env) {
+   require(['Env/Env', 'Application/Initializer', 'UI/Base', 'Core/core-init'], function (Env, AppInit, UIBase) {
       Env.constants.resourceRoot = resourceRoot;
       Env.constants.modules = require('json!/contents').modules;
+      AppInit.default({ resourceRoot }, void 0, new UIBase.StateReceiver());
       console.log(`server started http://localhost:${availablePort}`);
    }, function (err) {
       console.error(err);
@@ -75,6 +76,12 @@ function serverSideRender(req, res) {
    process.domain.req = req;
    process.domain.res = res;
 
+   const AppInit = requirejs('Application/Initializer');
+   const UIBase = requirejs('UI/Base');
+   AppInit.default(void 0, void 0, new UIBase.StateReceiver());
+
+   // App.startRequest({}, new UIBase.StateReceiver());
+
    const tpl = requirejs('wml!Controls/Application/Route');
 
    let pathRoot = req.originalUrl.split('/');
@@ -94,16 +101,13 @@ function serverSideRender(req, res) {
    }
    try {
       requirejs(cmp);
-   } catch (error) {
-      res.writeHead(404, {
-         'Content-Type': 'text/html'
-      });
-      res.end('');
+   } catch (e) {
+      res.status(404).end(JSON.stringify(e, null, 2));
 
       return;
    }
 
-   const html = tpl({
+   const rendering = tpl({
       lite: true,
       wsRoot: '/WS.Core/',
       resourceRoot,
@@ -114,19 +118,10 @@ function serverSideRender(req, res) {
       }
    });
 
-   if (html.addCallback) {
-      html.addCallback(function (htmlres) {
-         res.writeHead(200, {
-            'Content-Type': 'text/html'
-         });
-         res.end(htmlres);
-      });
-   } else {
-      res.writeHead(200, {
-         'Content-Type': 'text/html'
-      });
+   Promise.resolve(rendering).then((html) => {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
-   }
+   }).catch((e) => { res.status(500).end(JSON.stringify(e, null, 2)); });
    setDebugCookie(req, res);
 }
 
