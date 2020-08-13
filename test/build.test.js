@@ -46,7 +46,7 @@ describe('Build', () => {
             store: '',
             buildTools: 'builder'
          });
-         sinon.stub(buildB, '_modulesMap').value({build: () => undefined});
+         sinon.stub(buildB, '_modulesMap').value({build: () => undefined, getCDNModules:() => []});
          sinon.stub(buildB, '_tslibInstall').callsFake(() => undefined);
          sinon.stub(buildB, '_initWithBuilder').callsFake(() => {
             done();
@@ -62,7 +62,7 @@ describe('Build', () => {
             store: '',
             buildTools: 'jinnee'
          });
-         sinon.stub(buildG, '_modulesMap').value({build: () => undefined});
+         sinon.stub(buildG, '_modulesMap').value({build: () => undefined, getCDNModules:() => []});
          sinon.stub(buildG, '_tslibInstall').callsFake(() => undefined);
          sinon.stub(buildG, '_initWithJinnee').callsFake(() => {
             done();

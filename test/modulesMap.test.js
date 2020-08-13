@@ -79,25 +79,27 @@ describe('modulesMap', () => {
                ['test11', {name: 'test11', rep: 'test1', depends: ['test22']}],
                ['test22', {name: 'test22', rep: 'test2', depends: []}],
                ['test33', {name: 'test33', rep: 'test3', depends: []}],
+               ['test44', {name: 'test44', rep: 'test4', depends: ['test22', 'test11']}],
                ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11'], unitTest: true}],
                ['test_test2', {name: 'test_test2', rep: 'test2', depends: ['test22'], unitTest: true}],
-               ['test_test3', {name: 'test_test3', rep: 'test3', depends: ['test33'], unitTest: true}]
+               ['test_test3', {name: 'test_test3', rep: 'test3', depends: ['test33'], unitTest: true}],
+               ['test_test4', {name: 'test_test4', rep: 'test4', depends: ['test44'], unitTest: true}],
             ])
          );
       });
       it('should return all test', () => {
          stubTestRep = sinon.stub(modulesMap, '_testRep').value(['all']);
-         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test2', 'test_test3']);
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test2', 'test_test3', 'test_test4']);
       });
 
       it('should return test list for test1', () => {
          stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test1']);
-         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1']);
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test4']);
       });
 
       it('should return test list for test with depends', () => {
          stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test2']);
-         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test2', 'test_test1']);
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test2', 'test_test1', 'test_test4']);
       });
 
       it('should return test2 only', () => {
@@ -107,8 +109,13 @@ describe('modulesMap', () => {
       });
 
       it('should return test list if check two unliked tests', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test1', 'test3']);
-         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test3']);
+         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test4', 'test3']);
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test4', 'test_test3']);
+      });
+
+      it('should return ', () => {
+         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test4']);
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test4']);
       });
 
       afterEach(() => {
@@ -355,6 +362,40 @@ describe('modulesMap', () => {
 
       it('should return empty array for test2', () => {
          chai.expect(modulesMap.getTestModulesByRep('test2')).to.deep.equal([]);
+      });
+   });
+
+   describe('.getRequiredRepositories()', () => {
+      let stubrep;
+      beforeEach(() => {
+         sinon.stub(modulesMap, '_reposConfig').value({
+            test1: {
+               test: 'path'
+            },
+            test2: {
+               test: 'path'
+            },
+            test3: {}
+         });
+
+         sinon.stub(modulesMap, '_modulesMap').value(
+            new Map([
+               ['test11', {name: 'test11', rep: 'test1', depends: ['test12'], unitTest: true}],
+               ['test12', {name: 'test12', rep: 'test1', depends: []}],
+               ['test21', {name: 'test21', rep: 'test2', depends: ['test25']}]
+            ])
+         );
+
+         stubrep = sinon.stub(modulesMap, '_testRep').value(['test1']);
+      });
+
+      it('should return required repositories', () => {
+         chai.expect(new Set(['cdn', 'test1'])).to.deep.equal(modulesMap.getRequiredRepositories());
+      });
+
+      it('should not throw error when depend doesnt exists in map', () => {
+         stubrep.value(['test2']);
+         chai.expect(() => { modulesMap.getRequiredRepositories()}).not.throw();
       });
    });
 });

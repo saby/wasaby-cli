@@ -1,6 +1,6 @@
 {
    "name": "wasaby-cli",
-   "version": "20.5000.0",
+   "version": "20.5100.0",
    "description": "Build and run unit tests for wasaby",
    "scripts": {
       "test": "mocha",
@@ -21,9 +21,9 @@
       "express": "^4.16.3",
       "fs-extra": "^7.0.1",
       "p-map": "^2.1.0",
-      "saby-typescript": "git+https://platform-git.sbis.ru/saby/TypeScript.git#rc-20.5000",
-      "saby-units": "git+https://platform-git.sbis.ru/saby/Units.git#rc-20.5000",
-      "sbis3-builder": "git+https://platform-git.sbis.ru/saby/Builder.git#rc-20.5000",
+      "saby-typescript": "git+https://platform-git.sbis.ru/saby/TypeScript.git#rc-20.5100",
+      "saby-units": "git+https://platform-git.sbis.ru/saby/Units.git#rc-20.5100",
+      "sbis3-builder": "git+https://platform-git.sbis.ru/saby/Builder.git#rc-20.5100",
       "serve-static": "^1.14.1",
       "service-worker-mock": "^2.0.5",
       "webdriverio": "5.16.6",

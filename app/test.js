@@ -170,22 +170,22 @@ class Test extends Base {
 
    /**
     * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
-    * @param {String} name - Название репозитория
+    * @param {String|Array<String>>} names - Название репозитория
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
     * @private
     */
-   async _getTestConfig(name, suffix, testModules) {
+   async _getTestConfig(names, suffix, testModules) {
       const testConfig = require('../testConfig.base.json');
       let cfg = { ...testConfig };
-      const fullName = name + (suffix || '');
+      const fullName = names + (suffix || '');
       let workspace = fsUtil.relative(this._options.workDir, this._options.workspace);
       const testModulesArray = testModules instanceof Array ? testModules : [testModules];
       workspace = workspace || '.';
       cfg.url = { ...cfg.url };
       this._port = await getPort(this._port ? this._port + 1 : undefined);
       cfg.url.port = this._port;
-      this._portMap.set(name, this._port);
+      this._portMap.set(names, this._port);
       cfg.tests = testModulesArray;
       cfg.root = fsUtil.relative(process.cwd(), this._options.resources);
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
@@ -203,16 +203,19 @@ class Test extends Base {
       if (this._options.realResources) {
          nycPath = path.relative(this._options.workDir, this._options.realResources);
       }
-
+      const namesArray = (names instanceof Array) ? names : [names];
       testModulesArray.forEach((testModuleName) => {
          const moduleCfg = this._modulesMap.get(testModuleName);
          if (moduleCfg && moduleCfg.depends) {
             moduleCfg.depends.forEach((dependModuleName) => {
-               let nycModulePath = [dependModuleName, '**', '*.js'];
-               if (nycPath) {
-                  nycModulePath.unshift(nycPath);
+               const dependModuleCfg = this._modulesMap.get(dependModuleName);
+               if (dependModuleCfg && namesArray.includes(dependModuleCfg.rep)) {
+                  let nycModulePath = [dependModuleName, '**', '*.js'];
+                  if (nycPath) {
+                     nycModulePath.unshift(nycPath);
+                  }
+                  cfg.nyc.include.push(nycModulePath.join('/'));
                }
-               cfg.nyc.include.push(nycModulePath.join('/'));
             });
          }
       });
