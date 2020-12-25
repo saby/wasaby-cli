@@ -7,6 +7,10 @@
          "url": "sbis/engine",
          "unitInBrowser": true
       },
+      "saby-page": {
+         "mirror": "git.sbis.ru",
+         "url": "engine/saby-page"
+      },
       "saby-types": {
          "url": "saby/Types"
       },
@@ -107,6 +111,30 @@
       "imageEditor2": {
          "mirror": "git.sbis.ru",
          "url": "engine/imageeditor"
+      },
+      "notice": {
+         "mirror": "git.sbis.ru",
+         "url": "notice/core"
+      },
+      "configuration": {
+         "mirror": "git.sbis.ru",
+         "url": "navigation-configuration/configuration"
+      },
+      "informers": {
+         "mirror": "git.sbis.ru",
+         "url": "engine/informers"
+      },
+      "inside": {
+         "mirror": "git.sbis.ru",
+         "url": "online/inside"
+      },
+      "notes": {
+         "mirror": "git.sbis.ru",
+         "url": "root/sbis3-notes"
+      },
+      "edocore": {
+         "mirror": "git.sbis.ru",
+         "url": "edo/core"
       }
    }
 }
