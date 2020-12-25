@@ -107,6 +107,30 @@
       "imageEditor2": {
          "mirror": "git.sbis.ru",
          "url": "engine/imageeditor"
+      },
+      "sbis3-online-inside": {
+         "mirror": "git.sbis.ru",
+         "url": "online/inside"
+      },
+      "engine-informers": {
+         "mirror": "git.sbis.ru",
+         "url": "engine/informers"
+      },
+      "notice": {
+         "mirror": "git.sbis.ru",
+         "url": "notice/core"
+      },
+      "time-zone": {
+         "mirror": "git.sbis.ru",
+         "url": "work-time-mgmt/time-zone"
+      },
+      "plugin": {
+         "mirror": "git.sbis.ru",
+         "url": "plugin/core"
+      },
+      "sbis3-crypto": {
+         "mirror": "git.sbis.ru",
+         "url": "root/sbis3-crypto"
       }
    }
 }
