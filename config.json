@@ -7,6 +7,11 @@
          "url": "sbis/engine",
          "unitInBrowser": true
       },
+      "saby-page": {
+         "mirror": "git.sbis.ru",
+         "url": "engine/saby-page",
+         "unitInBrowser": true
+      },
       "saby-types": {
          "url": "saby/Types"
       },
