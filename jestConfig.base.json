@@ -1,0 +1,27 @@
+{
+    "displayName": null,
+    "rootDir": null,
+    "roots": null,
+    
+    "cacheDirectory": null,
+
+    "collectCoverage": false,
+    "collectCoverageFrom": null,
+    "coverageDirectory": null,
+    "coverageReporters": null,
+    "forceCoverageMatch": [""],
+
+    "errorOnDeprecated": false,
+    "slowTestThreshold": 5,
+
+    "automock": false,
+    "clearMocks": false,
+    "resetMocks": false,
+    "resetModules": false,
+    "restoreMocks": false,
+
+    "maxConcurrency": 5,
+    "maxWorkers": "50%",
+    "testFailureExitCode": 1,
+    "testTimeout": 5000
+}

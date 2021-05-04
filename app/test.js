@@ -77,6 +77,16 @@ const _private = {
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `testConfig_${repName}${browser}.json`))
       );
+   },
+
+   /**
+    * Возвращает путь до конфига юнит тестов Jest
+    * @param {String} repName Название репозитрия
+    * @returns {string}
+    * @private
+    */
+   getPathToJestConfig: (repName) => {
+      return path.normalize(path.join(__dirname, '..', `jestConfig_${repName}.json`));
    }
 };
 
@@ -96,6 +106,7 @@ class Test extends Base {
       this._diff = new Map();
       this._portMap = new Map();
       this._restartCounter = {};
+      this._useJest = cfg.useJest;
       if (this._report === 'console') {
          logger.silent();
       }
@@ -168,6 +179,29 @@ class Test extends Base {
          logger.error(`Сгенерированы отчеты с ошибками: ${error.join(', ')}`);
       }
       logger.log('Проверка пройдена успешно');
+   }
+
+   /**
+    * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
+    * @param {String|Array<String>>} names - Название репозитория
+    * @param {Array<String>} testModules - модули с юнит тестами
+    * @private
+    */
+   async _getJestConfig(names, testModules) {
+      const cfg = {...require('../jestConfig.base.json')};
+      cfg.displayName = `${names}`;
+      cfg.rootDir = path.join(process.cwd(), 'application');
+
+      const tests = testModules instanceof Array ? testModules : [testModules];
+      cfg.roots = tests.map(name => path.join('<rootDir>', name));
+
+      // TODO!!!
+      delete cfg['cacheDirectory'];
+      delete cfg['collectCoverageFrom'];
+      delete cfg['coverageDirectory'];
+      delete cfg['coverageReporters'];
+
+      return cfg;
    }
 
    /**
@@ -282,6 +316,24 @@ class Test extends Base {
       );
    }
 
+
+   /**
+    * Создает файл с конфигом для запуска юнит тестов Jest
+    * @param params - параметры для запуска юнит тестов Jest
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _makeJestConfig(params) {
+      const cfg = await this._getJestConfig(
+         params.name,
+         params.testModules
+      );
+      await fs.outputFile(
+         params.path,
+         JSON.stringify(cfg, null, 4)
+      );
+   }
+
    /**
     * Запускает юнит тесты
     * @returns {Promise<[]>}
@@ -298,6 +350,9 @@ class Test extends Base {
                return cfg && cfg.unitTest;
             }
          });
+         if (this._useJest) {
+            return this._startJestTest(this._options.testRep, modules);
+         }
          return Promise.all([
             this._startNodeTest(this._options.testRep, modules),
             this._startBrowserTest(this._options.testRep, modules)
@@ -307,6 +362,9 @@ class Test extends Base {
       return pMap(this._modulesMap.getRequiredModules(), (moduleName) => {
          if (this._shouldTestModule(moduleName)) {
             logger.log('Запуск тестов', moduleName);
+            if (this._useJest) {
+               return this._startJestTest(moduleName);
+            }
             return Promise.all([
                this._startNodeTest(moduleName),
                this._startBrowserTest(moduleName)
@@ -331,6 +389,38 @@ class Test extends Base {
       const report = _private.getReportTemplate();
       report.testsuite.testcase.push(_private.getSuccessTestCase(moduleName));
       xml.writeXmlFile(this.getReportPath(moduleName), report);
+   }
+
+   async _startJestTest(name, testModules) {
+      const processName = name;
+      try {
+         const pathToConfig = _private.getPathToJestConfig(name);
+
+         await this._makeJestConfig({
+            name: name,
+            testModules: testModules || name,
+            path: pathToConfig
+         });
+
+         // coverage, report, etc
+         const unitsPath = require.resolve('saby-units/cli.js');
+         let args = [
+            unitsPath, '--jest', `--jestConfig=${pathToConfig}`
+         ];
+
+         await this._shell.spawn(
+            'node',
+            args,
+            {
+               processName: processName,
+               timeout: TEST_TIMEOUT,
+               silent: this._report === 'console',
+               stdio: this._report === 'console' ? 'inherit' : 'pipe'
+            }
+         );
+      } catch (error) {
+         this._testErrors[processName] = error;
+      }
    }
 
    /**
@@ -359,6 +449,7 @@ class Test extends Base {
             let args = [unitsPath, '--isolated', coverage, report, `--configUnits=${pathToConfig}`].concat(
                this._getUnknownArgs()
             );
+
             await this._shell.spawn(
                'node',
                args,
@@ -396,6 +487,9 @@ class Test extends Base {
     * @private
     */
    async _startBrowserTest(name, testModules) {
+      if (this._useJest) {
+         return;
+      }
       const moduleCfg = this._modulesMap.get(name);
       if (
          !this._options.node &&
