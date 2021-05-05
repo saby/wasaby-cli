@@ -191,14 +191,14 @@ class Test extends Base {
       const cfg = {...require('../jestConfig.base.json')};
       cfg.displayName = `${names}`;
       cfg.rootDir = path.join(process.cwd(), 'application');
+      cfg.cacheDirectory = path.join(process.cwd(), 'application', 'jest-cache');
+      cfg.coverageDirectory = path.join(process.cwd(), 'application', 'jest-coverage');
 
       const tests = testModules instanceof Array ? testModules : [testModules];
       cfg.roots = tests.map(name => path.join('<rootDir>', name));
 
       // TODO!!!
-      delete cfg['cacheDirectory'];
       delete cfg['collectCoverageFrom'];
-      delete cfg['coverageDirectory'];
       delete cfg['coverageReporters'];
 
       return cfg;
@@ -405,7 +405,9 @@ class Test extends Base {
          // coverage, report, etc
          const unitsPath = require.resolve('saby-units/cli.js');
          let args = [
-            unitsPath, '--jest', `--jestConfig=${pathToConfig}`
+            unitsPath, '--jest', `--jestConfig=${pathToConfig}`,
+            `--json`,
+            `--outputFile=${path.join(process.cwd(), 'report.json')}`
          ];
 
          await this._shell.spawn(
