@@ -164,6 +164,7 @@ class Cli {
          argvOptions: this._argvOptions,
          //TODO Убрать когда возможность задать реализацию будет из корообки.
          isReact: this._argvOptions.react,
+         useJest: this._argvOptions.jest
       });
 
       await test.run();
