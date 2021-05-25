@@ -406,7 +406,7 @@ describe('modulesMap', () => {
       });
 
       it('should return required repositories', () => {
-         chai.expect(new Set(['cdn', 'test1'])).to.deep.equal(modulesMap.getRequiredRepositories());
+         chai.expect(new Set(['wasaby_cdn', 'test1'])).to.deep.equal(modulesMap.getRequiredRepositories());
       });
 
       it('should not throw error when depend doesnt exists in map', () => {
