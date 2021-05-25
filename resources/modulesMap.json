@@ -2226,10 +2226,10 @@
     "forCDN": false
   },
   "AccordionFont": {
-    "s3mod": "cdn\\AccordionFont\\AccordionFont.s3mod",
+    "s3mod": "wasaby_cdn\\AccordionFont\\AccordionFont.s3mod",
     "name": "AccordionFont",
-    "path": "cdn\\AccordionFont",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\AccordionFont",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2238,10 +2238,10 @@
     "forCDN": true
   },
   "AccordionFont-IE": {
-    "s3mod": "cdn\\AccordionFont-IE\\AccordionFont-IE.s3mod",
+    "s3mod": "wasaby_cdn\\AccordionFont-IE\\AccordionFont-IE.s3mod",
     "name": "AccordionFont-IE",
-    "path": "cdn\\AccordionFont-IE",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\AccordionFont-IE",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2250,10 +2250,10 @@
     "forCDN": true
   },
   "Boomerang": {
-    "s3mod": "cdn\\Boomerang\\Boomerang.s3mod",
+    "s3mod": "wasaby_cdn\\Boomerang\\Boomerang.s3mod",
     "name": "Boomerang",
-    "path": "cdn\\Boomerang",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\Boomerang",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2262,10 +2262,10 @@
     "forCDN": true
   },
   "CbucIcons": {
-    "s3mod": "cdn\\CbucIcons\\CbucIcons.s3mod",
+    "s3mod": "wasaby_cdn\\CbucIcons\\CbucIcons.s3mod",
     "name": "CbucIcons",
-    "path": "cdn\\CbucIcons",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\CbucIcons",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2274,10 +2274,10 @@
     "forCDN": true
   },
   "CbucIcons-IE": {
-    "s3mod": "cdn\\CbucIcons-IE\\CbucIcons-IE.s3mod",
+    "s3mod": "wasaby_cdn\\CbucIcons-IE\\CbucIcons-IE.s3mod",
     "name": "CbucIcons-IE",
-    "path": "cdn\\CbucIcons-IE",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\CbucIcons-IE",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2286,10 +2286,10 @@
     "forCDN": true
   },
   "EmojiFont": {
-    "s3mod": "cdn\\EmojiFont\\EmojiFont.s3mod",
+    "s3mod": "wasaby_cdn\\EmojiFont\\EmojiFont.s3mod",
     "name": "EmojiFont",
-    "path": "cdn\\EmojiFont",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\EmojiFont",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2298,10 +2298,10 @@
     "forCDN": true
   },
   "EmojiFont-IE": {
-    "s3mod": "cdn\\EmojiFont-IE\\EmojiFont-IE.s3mod",
+    "s3mod": "wasaby_cdn\\EmojiFont-IE\\EmojiFont-IE.s3mod",
     "name": "EmojiFont-IE",
-    "path": "cdn\\EmojiFont-IE",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\EmojiFont-IE",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2310,10 +2310,10 @@
     "forCDN": true
   },
   "Highcharts": {
-    "s3mod": "cdn\\Highcharts\\Highcharts.s3mod",
+    "s3mod": "wasaby_cdn\\Highcharts\\Highcharts.s3mod",
     "name": "Highcharts",
-    "path": "cdn\\Highcharts",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\Highcharts",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2322,10 +2322,10 @@
     "forCDN": true
   },
   "JQuery": {
-    "s3mod": "cdn\\JQuery\\JQuery.s3mod",
+    "s3mod": "wasaby_cdn\\JQuery\\JQuery.s3mod",
     "name": "JQuery",
-    "path": "cdn\\JQuery",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\JQuery",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2334,10 +2334,10 @@
     "forCDN": true
   },
   "LoaderIndicator": {
-    "s3mod": "cdn\\LoaderIndicator\\LoaderIndicator.s3mod",
+    "s3mod": "wasaby_cdn\\LoaderIndicator\\LoaderIndicator.s3mod",
     "name": "LoaderIndicator",
-    "path": "cdn\\LoaderIndicator",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\LoaderIndicator",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2346,10 +2346,10 @@
     "forCDN": true
   },
   "Maintenance": {
-    "s3mod": "cdn\\Maintenance\\Maintenance.s3mod",
+    "s3mod": "wasaby_cdn\\Maintenance\\Maintenance.s3mod",
     "name": "Maintenance",
-    "path": "cdn\\Maintenance",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\Maintenance",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2358,10 +2358,10 @@
     "forCDN": true
   },
   "RequireJS": {
-    "s3mod": "cdn\\RequireJS\\RequireJS.s3mod",
+    "s3mod": "wasaby_cdn\\RequireJS\\RequireJS.s3mod",
     "name": "RequireJS",
-    "path": "cdn\\RequireJS",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\RequireJS",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2370,10 +2370,10 @@
     "forCDN": true
   },
   "TensorFont": {
-    "s3mod": "cdn\\TensorFont\\TensorFont.s3mod",
+    "s3mod": "wasaby_cdn\\TensorFont\\TensorFont.s3mod",
     "name": "TensorFont",
-    "path": "cdn\\TensorFont",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\TensorFont",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -2382,10 +2382,10 @@
     "forCDN": true
   },
   "TensorFont-IE": {
-    "s3mod": "cdn\\TensorFont-IE\\TensorFont-IE.s3mod",
+    "s3mod": "wasaby_cdn\\TensorFont-IE\\TensorFont-IE.s3mod",
     "name": "TensorFont-IE",
-    "path": "cdn\\TensorFont-IE",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\TensorFont-IE",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -3971,10 +3971,10 @@
     "forCDN": false
   },
   "Punycode": {
-    "s3mod": "cdn\\Punycode\\Punycode.s3mod",
+    "s3mod": "wasaby_cdn\\Punycode\\Punycode.s3mod",
     "name": "Punycode",
-    "path": "cdn\\Punycode",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\Punycode",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
@@ -4391,10 +4391,10 @@
     "forCDN": false
   },
   "Codemirror": {
-    "s3mod": "cdn\\Codemirror\\Codemirror.s3mod",
+    "s3mod": "wasaby_cdn\\Codemirror\\Codemirror.s3mod",
     "name": "Codemirror",
-    "path": "cdn\\Codemirror",
-    "rep": "cdn",
+    "path": "wasaby_cdn\\Codemirror",
+    "rep": "wasaby_cdn",
     "useModuleMap": false,
     "entry": false,
     "depends": [],
