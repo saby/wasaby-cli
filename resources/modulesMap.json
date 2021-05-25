@@ -245,7 +245,8 @@
       "Controls-default-theme",
       "Types",
       "Browser",
-      "Env"
+      "Env",
+      "Router"
     ],
     "id": "00059a25-ea9d-4fb0-b94f-d85cc9ea3f09",
     "required": false,
@@ -1712,7 +1713,8 @@
     "depends": [
       "Types",
       "I18n",
-      "SbisEnv"
+      "SbisEnv",
+      "TransportCore"
     ],
     "id": "656177e2-4d75-42fa-9173-977dc90ff121",
     "required": true,
@@ -1745,7 +1747,8 @@
       "WS.Core",
       "Env",
       "Controls",
-      "UI"
+      "UI",
+      "TransportCore"
     ],
     "id": "636177e5-4d75-44fa-9173-977dc90ff191",
     "required": false,
@@ -1803,6 +1806,7 @@
     "entry": false,
     "depends": [
       "Browser",
+      "TransportCore",
       "Controls",
       "Controls-default-theme",
       "Env",
@@ -1842,7 +1846,8 @@
       "Router",
       "WS.Core",
       "SBIS3.CONTROLS",
-      "EngineLanguage"
+      "EngineLanguage",
+      "TransportCore"
     ],
     "unitTest": true,
     "testInBrowser": true,
@@ -1863,6 +1868,7 @@
       "Env",
       "UI",
       "Browser",
+      "TransportCore",
       "File"
     ],
     "id": "b87dc4eb-f434-4c48-81d9-2bd8bc97d0b2",
@@ -2123,7 +2129,6 @@
       "Application",
       "I18n",
       "Types",
-      "Inferno",
       "WasabyLoader",
       "Compiler",
       "React",
@@ -2147,7 +2152,8 @@
       "Controls",
       "Router",
       "SbisEnvUI",
-      "SbisEnvUI-default-theme"
+      "SbisEnvUI-default-theme",
+      "Env"
     ],
     "id": "85db6f66-683e-4ab1-9531-cfa9a718f696",
     "required": true,
@@ -2846,7 +2852,8 @@
       "PersonDeprecated",
       "SBIS3.CONTROLS",
       "Types",
-      "RequireJsLoader"
+      "RequireJsLoader",
+      "Hint"
     ],
     "id": "4d4a7b8e-19c2-4d5b-a2f4-1ff801bcc055",
     "required": false,
@@ -4009,7 +4016,9 @@
       "SbisEnvUI",
       "SbisEnvUI-default-theme",
       "Browser",
-      "Env"
+      "Env",
+      "Clipboard",
+      "SBIS3.Plugin"
     ],
     "id": "96b6db30-679e-4601-a42e-224603964e8a",
     "required": true,
@@ -4107,7 +4116,9 @@
       "NoticeConstants",
       "ExtControls",
       "ExtControls-default-theme",
-      "ServiceUpdateNotifier"
+      "ServiceUpdateNotifier",
+      "Configuration",
+      "WidgetsPage"
     ],
     "id": "16d6a735-086e-458b-963d-2dfa97f48c62",
     "required": true,
@@ -4252,7 +4263,8 @@
       "Controls",
       "Types",
       "Controls-default-theme",
-      "UI"
+      "UI",
+      "ExtControls"
     ],
     "id": "e86caf7c-156a-4858-8710-fcf3d8abcfbf",
     "required": false,
@@ -4335,7 +4347,8 @@
       "Types",
       "DOCVIEW3",
       "EngineUser",
-      "UI"
+      "UI",
+      "DOCVIEW3Core"
     ],
     "id": "6fcab978-35f7-48d5-8782-c1777aa35bef",
     "required": false,
@@ -4630,7 +4643,9 @@
       "Permission",
       "File",
       "UI",
-      "Layout"
+      "Layout",
+      "NavigationPanels",
+      "NavigationPanels-default-theme"
     ],
     "id": "9990fcab-234d-4c7b-9285-52400b7d619d",
     "required": false,
@@ -4683,7 +4698,6 @@
     "depends": [
       "Controls",
       "Controls-default-theme",
-      "RichEditor",
       "Types",
       "UI"
     ],
@@ -4745,7 +4759,14 @@
     "rep": "saby-ui",
     "useModuleMap": false,
     "entry": false,
-    "depends": [],
+    "depends": [
+      "WS.Core",
+      "Env",
+      "Application",
+      "Types",
+      "WasabyLoader",
+      "RequireJsLoader"
+    ],
     "id": "0f15ac6b-86b2-4265-9da1-05eac93ebdf6",
     "required": true,
     "forCDN": false
@@ -4758,6 +4779,11 @@
     "useModuleMap": false,
     "entry": false,
     "depends": [
+      "WS.Core",
+      "Env",
+      "Application",
+      "Types",
+      "Inferno",
       "UICommon"
     ],
     "id": "548e4ee9-10cd-4227-9e3c-0811958f979c",
@@ -4816,22 +4842,23 @@
     "forCDN": false
   },
   "ReactUnitTest": {
-    "s3mod": "saby-ui\\UIReact\\ReactUnitTest\\ReactUnitTest.s3mod",
+    "s3mod": "saby-ui\\UIInferno\\ReactUnitTest\\ReactUnitTest.s3mod",
     "name": "ReactUnitTest",
-    "path": "saby-ui\\UIReact\\ReactUnitTest",
+    "path": "saby-ui\\UIInferno\\ReactUnitTest",
     "rep": "saby-ui",
     "useModuleMap": false,
     "entry": false,
     "depends": [
-      "UI",
-      "UICore"
+      "Env",
+      "UICore",
+      "UICommon",
+      "Types"
     ],
     "unitTest": true,
     "testInBrowser": true,
     "id": "62bf645b-207a-4e83-b06d-41e8c51d6485",
     "required": false,
-    "forCDN": false,
-    "isReact": true
+    "forCDN": false
   },
   "App": {
     "s3mod": "navigation-configuration_configuration\\client\\App\\App.s3mod",
@@ -4850,7 +4877,8 @@
       "ExtControls-default-theme",
       "Hint",
       "Hint-default-theme",
-      "Hint-onlinenavigation-theme"
+      "Hint-onlinenavigation-theme",
+      "SabyPage"
     ],
     "id": "fa876524-b6c2-42cd-894e-c5c77543feb5",
     "required": true,
@@ -4873,7 +4901,8 @@
       "Types",
       "RequireJsLoader",
       "WasabyLoader",
-      "ParametersWebAPI"
+      "ParametersWebAPI",
+      "HistoryChanges"
     ],
     "id": "1c578123-3233-4dc4-b652-7c9504298950",
     "required": true,
@@ -4948,27 +4977,6 @@
     ],
     "unitTest": true,
     "id": "4cde93a1-86e2-4a93-a181-b2dd35761234",
-    "required": true,
-    "forCDN": false
-  },
-  "NavigationPanels-demo": {
-    "s3mod": "engine_saby-page\\client\\NavigationPanels-demo\\NavigationPanels-demo.s3mod",
-    "name": "NavigationPanels-demo",
-    "path": "engine_saby-page\\client\\NavigationPanels-demo",
-    "rep": "engine_saby-page",
-    "useModuleMap": false,
-    "entry": false,
-    "depends": [
-      "SabyPage",
-      "Controls-default-theme",
-      "Controls-onlinenavigation-theme",
-      "NavigationPanels-onlinenavigation-theme",
-      "NavigationPanels",
-      "NavigationPanels-default-theme",
-      "Router",
-      "Page"
-    ],
-    "id": "056530f3-4d52-4264-ace4-dcb0eb048891",
     "required": true,
     "forCDN": false
   },
@@ -5102,7 +5110,11 @@
       "Hint",
       "Wizard",
       "AuthFramework",
-      "PollWizard"
+      "Carousel",
+      "Carousel-default-theme",
+      "PollWizard",
+      "LongOperations",
+      "LongOperations-default-theme"
     ],
     "id": "b455fe88-d470-4f9b-8997-2f0df293cc9c",
     "required": true,
@@ -5117,7 +5129,8 @@
     "entry": false,
     "depends": [
       "Types",
-      "Controls"
+      "Controls",
+      "EngineUser"
     ],
     "id": "039c8d18-83b0-4823-b27e-5683c3d962c4",
     "required": true,
@@ -5163,7 +5176,9 @@
       "PTComponents",
       "BaseWidget",
       "Application",
-      "SiteEditorCommon"
+      "SiteEditorCommon",
+      "LongOperations",
+      "LongOperations-default-theme"
     ],
     "id": "46f59172-39f5-4604-8890-3ccd2ccd2f1e",
     "required": true,
@@ -5180,6 +5195,236 @@
       "SiteEditorExternal"
     ],
     "id": "4abe4e67-b1ce-4ca5-98ba-da025dd862ae",
+    "required": false,
+    "forCDN": false
+  },
+  "MassEditing": {
+    "s3mod": "sbis3.engine\\client\\MassEditing\\MassEditing.s3mod",
+    "name": "MassEditing",
+    "path": "sbis3.engine\\client\\MassEditing",
+    "rep": "sbis3.engine",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "UI",
+      "Controls",
+      "Controls-default-theme",
+      "Types",
+      "Env",
+      "RequireJsLoader"
+    ],
+    "id": "88639f35-c929-49d2-985a-2abf36205ae3",
+    "required": true,
+    "forCDN": false
+  },
+  "MassEditing-default-theme": {
+    "s3mod": "sbis3.engine\\client\\MassEditing-default-theme\\Merge-default-theme.s3mod",
+    "name": "MassEditing-default-theme",
+    "path": "sbis3.engine\\client\\MassEditing-default-theme",
+    "rep": "sbis3.engine",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls-default-theme",
+      "MassEditing"
+    ],
+    "id": "91bdd952-5414-44d2-8344-762240a6917e",
+    "required": true,
+    "forCDN": false
+  },
+  "TransportCore": {
+    "s3mod": "rmi\\src\\client\\TransportCore\\TransportCore.s3mod",
+    "name": "TransportCore",
+    "path": "rmi\\src\\client\\TransportCore",
+    "rep": "rmi",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "WS.Core"
+    ],
+    "id": "c0ca5014-5376-4f60-bbf3-af1dfcb8b999",
+    "required": true,
+    "forCDN": false
+  },
+  "AppIconCDN": {
+    "s3mod": "engine-cdn\\AppIconCDN\\AppIconCDN.s3mod",
+    "name": "AppIconCDN",
+    "path": "engine-cdn\\AppIconCDN",
+    "rep": "engine-cdn",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [],
+    "id": "d72b9b34-c22c-4484-90af-17b304be8b13",
+    "required": true,
+    "forCDN": true
+  },
+  "AppLogoCDN": {
+    "s3mod": "engine-cdn\\AppLogoCDN\\AppLogoCDN.s3mod",
+    "name": "AppLogoCDN",
+    "path": "engine-cdn\\AppLogoCDN",
+    "rep": "engine-cdn",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [],
+    "id": "76227a58-ce63-4d04-a27c-270e9ddcb719",
+    "required": true,
+    "forCDN": true
+  },
+  "App-demo": {
+    "s3mod": "navigation-configuration_configuration\\client\\App-demo\\App-demo.s3mod",
+    "name": "App-demo",
+    "path": "navigation-configuration_configuration\\client\\App-demo",
+    "rep": "navigation-configuration_configuration",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls",
+      "ControlExample",
+      "DemoStand"
+    ],
+    "id": "f0728c57-1801-42b7-bc39-4283de9ac865",
+    "required": true,
+    "forCDN": false
+  },
+  "AuthControls": {
+    "s3mod": "access-control\\client\\AuthControls\\AuthControls.s3mod",
+    "name": "AuthControls",
+    "path": "access-control\\client\\AuthControls",
+    "rep": "access-control",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [],
+    "id": "b21bd67c-56f8-42d9-b3f1-9ee66402d15c",
+    "required": true,
+    "forCDN": false
+  },
+  "AuthControls-default-theme": {
+    "s3mod": "access-control\\client\\AuthControls-default-theme\\AuthControls-default-theme.s3mod",
+    "name": "AuthControls-default-theme",
+    "path": "access-control\\client\\AuthControls-default-theme",
+    "rep": "access-control",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [],
+    "id": "15831590-f52e-4551-919b-808b1a14e389",
+    "required": true,
+    "forCDN": false
+  },
+  "AuthControls-retail-theme": {
+    "s3mod": "access-control\\client\\AuthControls-retail-theme\\AuthControls-retail-theme.s3mod",
+    "name": "AuthControls-retail-theme",
+    "path": "access-control\\client\\AuthControls-retail-theme",
+    "rep": "access-control",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [],
+    "id": "e658893e-959a-4a56-a535-b0287f61d51b",
+    "required": true,
+    "forCDN": false
+  },
+  "DemoApp": {
+    "s3mod": "access-control\\client\\DemoApp\\DemoApp.s3mod",
+    "name": "DemoApp",
+    "path": "access-control\\client\\DemoApp",
+    "rep": "access-control",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Vdom",
+      "Types",
+      "Clipboard",
+      "Permission",
+      "HistoryChanges",
+      "UI",
+      "Controls"
+    ],
+    "id": "a6441b9d-bbba-46c4-99db-54afad0b6720",
+    "required": true,
+    "forCDN": false
+  },
+  "DemoApp-default-theme": {
+    "s3mod": "access-control\\client\\DemoApp-default-theme\\DemoApp-default-theme.s3mod",
+    "name": "DemoApp-default-theme",
+    "path": "access-control\\client\\DemoApp-default-theme",
+    "rep": "access-control",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "IntegrationSettings"
+    ],
+    "id": "3b2cec84-27c7-4757-a7f7-1e9f703941d7",
+    "required": true,
+    "forCDN": false
+  },
+  "WidgetsPage": {
+    "s3mod": "engine_saby-page\\client\\WidgetsPage\\WidgetsPage.s3mod",
+    "name": "WidgetsPage",
+    "path": "engine_saby-page\\client\\WidgetsPage",
+    "rep": "engine_saby-page",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls",
+      "Controls-default-theme",
+      "Permission",
+      "WasabyLoader",
+      "SiteEditorExternal",
+      "CloudStatisticsHelper",
+      "BaseWidget",
+      "Hint",
+      "Browser",
+      "SbisEnvUI"
+    ],
+    "id": "b98a4426-27ed-4bd0-8b48-e8c9050582e7",
+    "required": true,
+    "forCDN": false
+  },
+  "SiteEditor-demo": {
+    "s3mod": "site-development_site-editor\\client\\SiteEditor-demo\\SiteEditor-demo.s3mod",
+    "name": "SiteEditor-demo",
+    "path": "site-development_site-editor\\client\\SiteEditor-demo",
+    "rep": "site-development_site-editor",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls",
+      "Controls-default-theme",
+      "SbisEnvUI",
+      "Router",
+      "WS.Core",
+      "Types",
+      "RequireJsLoader",
+      "Permission",
+      "File",
+      "UI",
+      "Layout",
+      "NavigationPanels",
+      "NavigationPanels-default-theme",
+      "SiteEditor",
+      "SiteEditorExternal",
+      "SiteEditorLayout"
+    ],
+    "id": "fb9595df-9f07-4098-983b-b52cc3f8bf58",
+    "required": false,
+    "forCDN": false
+  },
+  "SiteEditorLayout": {
+    "s3mod": "site-development_site-editor\\client\\SiteEditorLayout\\SiteEditorLayout.s3mod",
+    "name": "SiteEditorLayout",
+    "path": "site-development_site-editor\\client\\SiteEditorLayout",
+    "rep": "site-development_site-editor",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls",
+      "Controls-default-theme",
+      "UI",
+      "Types",
+      "SiteEditorExternal",
+      "Headers",
+      "Headers-default-theme"
+    ],
+    "id": "3c060a69-2ff5-40ad-b2f5-a1c0f5f9cfc9",
     "required": false,
     "forCDN": false
   }

@@ -43,7 +43,7 @@
          "url": "saby/ui",
          "unitInBrowser": true
       },
-      "cdn": {
+      "wasaby_cdn": {
          "url": "saby/wasaby-cdn"
       },
       "sbis-cdn": {

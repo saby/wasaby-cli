@@ -172,7 +172,7 @@ class Test extends Base {
 
    /**
     * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
-    * @param {String|Array<String>>} names - Название репозитория
+    * @param {String|Array<String>} names - Название репозитория
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
     * @private
@@ -291,7 +291,7 @@ class Test extends Base {
       if (this._options.only) {
          // если тесты запускаются только по одному репозиторию то не разделяем их по модулям
          logger.log('Запуск тестов', this._options.testRep);
-         let modules = this._modulesMap.getRequiredModules().filter((moduleName) => {
+         let modules = this._modulesMap.getRequiredModules(this.modules).filter((moduleName) => {
             let cfg = this._modulesMap.get(moduleName);
             //TODO Удалить, довабил по ошибке https://online.sbis.ru/opendoc.html?guid=4c7b5d67-6afa-4222-b3cd-22b2e658b3a8
             if (cfg !== undefined) {
@@ -304,9 +304,10 @@ class Test extends Base {
          ]);
       }
 
-      return pMap(this._modulesMap.getRequiredModules(), (moduleName) => {
+      return pMap(this._modulesMap.getRequiredModules(this.modules), (moduleName) => {
          if (this._shouldTestModule(moduleName)) {
             logger.log('Запуск тестов', moduleName);
+
             return Promise.all([
                this._startNodeTest(moduleName),
                this._startBrowserTest(moduleName)
