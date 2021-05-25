@@ -110,7 +110,7 @@ class ModulesMap {
     * Возвращает список необходимых модулей
     * @return {Array}
     */
-   getRequiredModules() {
+   getRequiredModules(modules) {
       if (this._modulesList) {
          return this._modulesList;
       }
@@ -141,8 +141,30 @@ class ModulesMap {
          list = this.getTestModulesByRep('all');
       }
 
+      if (modules && modules.length !== 0) {
+         list = this.filterUnitTestModules(list, modules);
+      }
+
       this._modulesList = list;
       return this._modulesList;
+   }
+
+   filterUnitTestModules(modules, requiredModules) {
+      const result = new Set();
+
+      for (const moduleName of requiredModules) {
+         const module = this._modulesMap.get(moduleName);
+
+         for (const unitModuleName of modules) {
+            const unitModule = this._modulesMap.get(unitModuleName);
+
+            if (module.rep === unitModule.rep) {
+               result.add(unitModuleName);
+            }
+         }
+      }
+
+      return Array.from(result);
    }
 
    //TODO Убрать когда возможность задать реализацию будет из корообки.

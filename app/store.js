@@ -21,6 +21,7 @@ class Store extends Base {
       this._argvOptions = cfg.argvOptions;
       this._config = cfg.config;
       this._rc = cfg.rc;
+      this.cdnVersion = cfg.cdnVersion;
       this._testRep = cfg.testRep;
       this._projectPath = cfg.projectPath;
    }
@@ -56,13 +57,22 @@ class Store extends Base {
 
       // если есть путь до репозитория то его не надо выкачивать
       if (!cfg.skip && !cfg.path) {
-         const branch = this._argvOptions[name] || cfg.version || this._rc;
+         const branch = this.getCheckoutBranch(name, cfg);
+
          await this.cloneRepToStore(name);
          await this.checkout(
             name,
             branch
          );
       }
+   }
+
+   getCheckoutBranch(nameRepos, config) {
+      if (nameRepos.endsWith('-cdn') || nameRepos.endsWith('_cdn')) {
+         return this._argvOptions[nameRepos] || this.cdnVersion || config.version || this._rc;
+      }
+
+      return this._argvOptions[nameRepos] || config.version || this._rc;
    }
 
    /**
