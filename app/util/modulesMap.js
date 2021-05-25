@@ -5,7 +5,7 @@ const walkDir = require('./walkDir');
 const fs = require('fs-extra');
 
 const MAP_FILE = path.normalize(path.join(__dirname, '..', '..', 'resources', 'modulesMap.json'));
-const CDN_REP_NAME = 'cdn';
+const CDN_REP_NAME = 'wasaby_cdn';
 const WSCoreDepends = ['Types', 'Env', 'View', 'Vdom', 'UI', 'Browser'];
 /**
  * Карта модулей s3mod, из всех репозиториев
