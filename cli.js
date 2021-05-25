@@ -36,6 +36,7 @@ class Cli {
       // на _repos остались завязаны srv и скрипт сборки пока это не убрать
       this._store = path.join(this._store, '_repos');
       this._rc = this._argvOptions.rc || cfg.rc;
+      this.cdnVersion = this._argvOptions.cdn || cfg.cdn || this._rc;
       this._workDir = this._argvOptions.workDir || path.join(process.cwd(), cfg.workDir);
       this._workspace = this._argvOptions.workspace || this._workDir;
       this.tasks = this._argvOptions.tasks ? this._argvOptions.tasks.split(',') : ['initStore', 'build', 'startTest'];
@@ -134,6 +135,7 @@ class Cli {
       const store = new Store({
          argvOptions: this._argvOptions,
          rc: this._rc,
+         cdnVersion: this.cdnVersion,
          config: this._config,
          store: this._store,
          testRep: this._testRep,
@@ -147,6 +149,7 @@ class Cli {
 
    async test() {
       const test = new Test({
+         modules: this._argvOptions.modules ? this._argvOptions.modules.split(',') : [],
          config: this._config,
          resources: this._resources,
          store: this._store,
