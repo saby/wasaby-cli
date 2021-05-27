@@ -79,16 +79,17 @@ class Build extends Base {
 
       await this._linkCDN()
       await this._makeBuilderConfig();
-      await this._startBuilder(gulpPath, builderPath, 'build');
+      await this._startBuilder(gulpPath, builderPath, 'build', this._options.argvOptions['log-lever']);
 
       if (this._options.watcher) {
          await this._startBuilder(gulpPath, builderPath, 'buildOnChangeWatcher');
       }
    }
 
-   async _startBuilder(gulpPath, builderPath, buildMode) {
+   async _startBuilder(gulpPath, builderPath, buildMode, logLevel) {
+      const additionalParams = `--color ${logLevel ? `--log-level=${logLevel}` : ''}`;
       await this._shell.execute(
-         `node ${gulpPath} --gulpfile=${builderPath} ${buildMode} --config=${this._builderCfg}`,
+         `node ${gulpPath} --gulpfile=${builderPath} ${buildMode} --config=${this._builderCfg} ${additionalParams}`,
          process.cwd(), {
             name: 'builder',
             errorLabel: '[ERROR]'
