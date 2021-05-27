@@ -51,7 +51,7 @@ class Cli {
          this._testRep = cfg.testRep;
          this._only = true;
       } else {
-         this._testRep = 'all';
+         this._testRep = ['all'];
       }
 
       if (this._argvOptions.projectDir || this._argvOptions.project) {

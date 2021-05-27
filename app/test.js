@@ -14,6 +14,7 @@ const NODE_SUFFIX = '_node';
 const PARALLEL_TEST_COUNT = 2;
 const TEST_TIMEOUT = 60 * 5 * 1000;
 const REPORT_PATH = '{workspace}/artifacts/{module}/xunit-report.xml';
+const ORDER_PATH = '{workspace}/artifacts/order.json';
 const ALLOWED_ERRORS_FILE = path.normalize(path.join(__dirname, '..', 'resources', 'allowedErrors.json'));
 const MAX_TEST_RESTART = 5;
 
@@ -96,6 +97,7 @@ class Test extends Base {
       this._diff = new Map();
       this._portMap = new Map();
       this._restartCounter = {};
+      this.startedTests = {};
       if (this._report === 'console') {
          logger.silent();
       }
@@ -191,6 +193,8 @@ class Test extends Base {
       cfg.root = fsUtil.relative(process.cwd(), this._options.resources);
       cfg.report = this.getReportPath(fullName);
       cfg.ignoreLeaks = !this._options.checkLeaks;
+
+      this.startedTests[fullName] = cfg.report;
 
       // coverage options
       const workspace = fsUtil.relative(this._options.workDir, this._options.workspace) || '.';
@@ -291,20 +295,15 @@ class Test extends Base {
       if (this._options.only) {
          // если тесты запускаются только по одному репозиторию то не разделяем их по модулям
          logger.log('Запуск тестов', this._options.testRep);
-         let modules = this._modulesMap.getRequiredModules(this.modules).filter((moduleName) => {
-            let cfg = this._modulesMap.get(moduleName);
-            //TODO Удалить, довабил по ошибке https://online.sbis.ru/opendoc.html?guid=4c7b5d67-6afa-4222-b3cd-22b2e658b3a8
-            if (cfg !== undefined) {
-               return cfg && cfg.unitTest;
-            }
-         });
+         let modules = this._modulesMap.getTestModulesByRep(this._options.testRep);
+
          return Promise.all([
             this._startNodeTest(this._options.testRep, modules),
             this._startBrowserTest(this._options.testRep, modules)
          ]);
       }
 
-      return pMap(this._modulesMap.getRequiredModules(this.modules), (moduleName) => {
+      return pMap(this._modulesMap.getUnitsTestModules(this.modules), (moduleName) => {
          if (this._shouldTestModule(moduleName)) {
             logger.log('Запуск тестов', moduleName);
 
@@ -502,6 +501,9 @@ class Test extends Base {
          await this._setDiff();
          await this._loadErrorsSet();
          await this._startTest();
+
+         await fs.outputFile(this.getOrderPath(), JSON.stringify(this.startedTests, null, 3));
+
          if (!this._options.server && this._report === 'xml') {
             await this.checkReport();
             await this.prepareReport();
@@ -512,6 +514,11 @@ class Test extends Base {
          e.message = `Тестирование завершено с ошибкой ${e}`;
          throw e;
       }
+   }
+
+   getOrderPath() {
+      const workspace = fsUtil.relative(process.cwd(), this._options.workspace);
+      return ORDER_PATH.replace('{workspace}', workspace || '.');
    }
 
    /**
