@@ -3,6 +3,7 @@
  * @author Ганшин Я.О
  */
 const fs = require('fs-extra');
+const path = require('path');
 
 /**
  * Выводит сообщение в лог
@@ -27,6 +28,18 @@ class Logger {
     */
    get logFile() {
       return this._logFile;
+   }
+
+   set logDir(logDir) {
+      this._logDir = logDir;
+   }
+
+   get logDir() {
+      return this._logDir;
+   }
+
+   writeLogFile(name, content) {
+      fs.outputFileSync(path.join(this.logDir, name), content);
    }
 
    /**

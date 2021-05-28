@@ -14,7 +14,6 @@ const NODE_SUFFIX = '_node';
 const PARALLEL_TEST_COUNT = 2;
 const TEST_TIMEOUT = 60 * 5 * 1000;
 const REPORT_PATH = '{workspace}/artifacts/{module}/xunit-report.xml';
-const ORDER_PATH = '{workspace}/artifacts/order.json';
 const ALLOWED_ERRORS_FILE = path.normalize(path.join(__dirname, '..', 'resources', 'allowedErrors.json'));
 const MAX_TEST_RESTART = 5;
 
@@ -502,7 +501,7 @@ class Test extends Base {
          await this._loadErrorsSet();
          await this._startTest();
 
-         await fs.outputFile(this.getOrderPath(), JSON.stringify(this.startedTests, null, 3));
+         logger.writeLogFile('testOrder.json', JSON.stringify(this.startedTests, null, 3));
 
          if (!this._options.server && this._report === 'xml') {
             await this.checkReport();
@@ -514,11 +513,6 @@ class Test extends Base {
          e.message = `Тестирование завершено с ошибкой ${e}`;
          throw e;
       }
-   }
-
-   getOrderPath() {
-      const workspace = fsUtil.relative(process.cwd(), this._options.workspace);
-      return ORDER_PATH.replace('{workspace}', workspace || '.');
    }
 
    /**
