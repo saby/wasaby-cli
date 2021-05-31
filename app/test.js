@@ -171,6 +171,53 @@ class Test extends Base {
    }
 
    /**
+    * Возвращает Jest конфиг юнит тестов на основе базового jestTestConfig.base.json
+    * @param {String|Array<String>} names - Название репозитория
+    * @param {String} suffix - browser/node
+    * @param {Array<String>} testModules - модули с юнит тестами
+    * @private
+    */
+   async _getJestTestConfig(names, suffix, testModules) {
+      const cfg = {...require('../jestTestConfig.base.json')};
+      // Директория, в которой производится запуск юнитов
+      const rootDir = process.cwd();
+      // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
+      const applicationDir = fsUtil.relative(rootDir, this._options.resources);
+      // Директория ветки, либо корневая директория локального репозитория
+      const workspace = fsUtil.relative(this._options.workDir, this._options.workspace) || '.';
+      // Директория, в которой хранятся артефакты
+      const artifactsDir = fsUtil.relative(rootDir, this._options.workspace);
+      // Директория, в которой хранится кеш для фреймворка Jest
+      const cacheDir = fsUtil.relative(rootDir, path.join(workspace, 'jest-cache'));
+
+      // Список директорий с тестами, находящимися в applicationDir
+      const currentTests = testModules instanceof Array ? testModules : [testModules];
+      const tests = currentTests.map(testDir => path.join(
+          '<rootDir>',
+          fsUtil.relative(
+              rootDir,
+              path.join(applicationDir, testDir)
+          )
+      ));
+
+      cfg.displayName = `${names}`;
+      cfg.rootDir = rootDir;
+      cfg.moduleDirectories = [
+         'node_modules',
+         applicationDir
+      ];
+      cfg.cacheDirectory = cacheDir;
+      cfg.roots = tests;
+
+      // TODO!!!
+      delete cfg['coverageDirectory'];
+      delete cfg['collectCoverageFrom'];
+      delete cfg['coverageReporters'];
+
+      return cfg;
+   }
+
+   /**
     * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
     * @param {String|Array<String>} names - Название репозитория
     * @param {String} suffix - browser/node
@@ -276,7 +323,13 @@ class Test extends Base {
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
          params.testModules
       );
-      console.log(`[SPY CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
+      const jestCfg = await this._getJestTestConfig(
+          params.name,
+          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
+          params.testModules
+      );
+      console.log(`[SPY MOCHA CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
+      console.log(`[SPY JEST CONFIG]::${JSON.stringify(jestCfg, null, ' ')}`);
       console.log(`[SPY OPTIONS]::${JSON.stringify(this._options, null, ' ')}`);
       await fs.outputFile(
          params.path,
