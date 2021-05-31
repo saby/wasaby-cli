@@ -272,12 +272,17 @@ class Test extends Base {
    async _getJestTestConfig(names, suffix, testModules) {
       const cfg = {...require('../jestTestConfig.base.json')};
       cfg.displayName = `${names}`;
-      cfg.rootDir = path.join(process.cwd(), 'application');
+      cfg.rootDir = process.cwd();
+      cfg.moduleDirectories = [
+         'node_modules',
+         path.join(process.cwd(), 'application')
+      ];
+
       cfg.cacheDirectory = path.join(process.cwd(), 'application', 'jest-cache');
       cfg.coverageDirectory = path.join(process.cwd(), 'application', 'jest-coverage');
 
       const tests = testModules instanceof Array ? testModules : [testModules];
-      cfg.roots = tests.map(name => path.join('<rootDir>', name));
+      cfg.roots = tests.map(name => path.join('<rootDir>/application/', name));
 
       // TODO!!!
       delete cfg['collectCoverageFrom'];
