@@ -19,6 +19,17 @@ const MAX_TEST_RESTART = 5;
 
 const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
+const JEST_FRAMEWORK_ENABLED = true;
+
+/**
+ * Постепенно раскатаем jest по репозиториям, чтобы не ломать всё и сразу.
+ * Запишем сюда имена репозиториев (name в package.json), чтобы понимать,
+ * запускать unit-тесты с помощью mocha или jest.
+ */
+const JEST_REPO_NAMES = [
+   'saby-ui'
+];
+
 const _private = {
 
    /**
@@ -65,7 +76,7 @@ const _private = {
    }),
 
    /**
-    * Возвращает путь до конфига юнит тестов
+    * Возвращает путь до Mocha конфига юнит тестов
     * @param {String} repName Название репозитрия
     * @param {Boolean} isBrowser - Юниты в браузере
     * @returns {string}
@@ -76,6 +87,21 @@ const _private = {
       return fsUtil.relative(
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `testConfig_${repName}${browser}.json`))
+      );
+   },
+
+   /**
+    * Возвращает путь до Jest конфига юнит тестов
+    * @param repName {String} Название репозитория
+    * @param isBrowser {Boolean} Юниты в браузере
+    * @returns {string}
+    * @private
+    */
+   getPathToJestTestConfig: (repName, isBrowser) => {
+      const browser = isBrowser ? '_browser' : '';
+      return fsUtil.relative(
+         process.cwd(),
+         path.normalize(path.join(__dirname, '..', `jestTestConfig_${repName}${browser}.json`))
       );
    }
 };
@@ -172,7 +198,7 @@ class Test extends Base {
    }
 
    /**
-    * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
+    * Возвращает Mocha конфиг юнит тестов на основе базового testConfig.base.json
     * @param {String|Array<String>} names - Название репозитория
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
@@ -237,6 +263,30 @@ class Test extends Base {
    }
 
    /**
+    * Возвращает Jest конфиг юнит тестов на основе базового jestTestConfig.base.json
+    * @param {String|Array<String>} names - Название репозитория
+    * @param {String} suffix - browser/node
+    * @param {Array<String>} testModules - модули с юнит тестами
+    * @private
+    */
+   async _getJestTestConfig(names, suffix, testModules) {
+      const cfg = {...require('../jestTestConfig.base.json')};
+      cfg.displayName = `${names}`;
+      cfg.rootDir = path.join(process.cwd(), 'application');
+      cfg.cacheDirectory = path.join(process.cwd(), 'application', 'jest-cache');
+      cfg.coverageDirectory = path.join(process.cwd(), 'application', 'jest-coverage');
+
+      const tests = testModules instanceof Array ? testModules : [testModules];
+      cfg.roots = tests.map(name => path.join('<rootDir>', name));
+
+      // TODO!!!
+      delete cfg['collectCoverageFrom'];
+      delete cfg['coverageReporters'];
+
+      return cfg;
+   }
+
+   /**
     * Возвращает путь до конфига
     * @param {string} fullName - название модуля с тестами
     * @returns {string}
@@ -268,13 +318,40 @@ class Test extends Base {
    }
 
    /**
-    * Создает файл с конфигом для запуска юнит тестов
+    * Проверяет, нужно ли запускать юнит тесты под Jest
+    * @param moduleName {String} Название модуля
+    * @private
+    */
+   _shouldRunJestFramework(moduleName) {
+      return JEST_FRAMEWORK_ENABLED && JEST_REPO_NAMES.indexOf(moduleName) > -1;
+   }
+
+   /**
+    * Создает файл с Mocha конфигом для запуска юнит тестов
     * @param params - параметры для запуска юнит тестов
     * @returns {Promise<void>}
     * @private
     */
    async _makeTestConfig(params) {
       const cfg = await this._getTestConfig(
+         params.name,
+         params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
+         params.testModules
+      );
+      await fs.outputFile(
+         params.path,
+         JSON.stringify(cfg, null, 4)
+      );
+   }
+
+   /**
+    * Создает файл с Jest конфигом для запуска юнит тестов
+    * @param params - параметры для запуска юнит тестов
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _makeJestTestConfig(params) {
+      const cfg = await this._getJestTestConfig(
          params.name,
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
          params.testModules
@@ -341,23 +418,47 @@ class Test extends Base {
     */
    async _startNodeTest(name, testModules) {
       if (!this._testOnlyBrowser) {
-         const processName = name + NODE_SUFFIX;
+         const moduleName = `${name}`;
+         const useJest = this._shouldRunJestFramework(moduleName);
+         const processName = moduleName + NODE_SUFFIX;
          try {
-            const pathToConfig = _private.getPathToTestConfig(name, false);
+            const pathToConfig = useJest
+               ? _private.getPathToJestTestConfig(name, false)
+               : _private.getPathToTestConfig(name, false);
 
-            await this._makeTestConfig({
-               name: name,
-               testModules: testModules || name,
-               path: pathToConfig,
-               isBrowser: false
-            });
+            if (useJest) {
+               await this._makeJestTestConfig({
+                  name: name,
+                  testModules: testModules || name,
+                  path: pathToConfig,
+                  isBrowser: false
+               });
+            } else {
+               await this._makeTestConfig({
+                  name: name,
+                  testModules: testModules || name,
+                  path: pathToConfig,
+                  isBrowser: false
+               });
+            }
 
             const coverage = this._options.coverage ? '--coverage' : '';
             const report = this._report === 'xml' ? '--report' : '';
             const unitsPath = require.resolve('saby-units/cli.js');
-            let args = [unitsPath, '--isolated', coverage, report, `--configUnits=${pathToConfig}`].concat(
-               this._getUnknownArgs()
-            );
+            const cliParam = useJest ? '--jest' : '--isolated';
+            const otherArguments = this._getUnknownArgs(['tasks']);
+            let args = [
+               unitsPath,
+               cliParam,
+               coverage,
+               report,
+               `--configUnits=${pathToConfig}`,
+               ...otherArguments
+            ];
+            if (useJest) {
+               args.push('--env=node');
+            }
+
             await this._shell.spawn(
                'node',
                args,
@@ -396,24 +497,32 @@ class Test extends Base {
     */
    async _startBrowserTest(name, testModules) {
       const moduleCfg = this._modulesMap.get(name);
-      if (
-         !this._options.node &&
-            (
-               (moduleCfg && moduleCfg.testInBrowser) ||
-               !moduleCfg ||
-               this._testOnlyBrowser
-            )
-      ) {
-         const configPath = _private.getPathToTestConfig(name, true);
+      const canRunBrowserTests =  !this._options.node && (
+         (moduleCfg && moduleCfg.testInBrowser) || !moduleCfg || this._testOnlyBrowser
+      );
+      if (canRunBrowserTests) {
+         const useJest = this._shouldRunJestFramework(name);
+         const configPath = useJest
+            ? _private.getPathToJestTestConfig(name, true)
+            : _private.getPathToTestConfig(name, true);
          const coverage = this._options.coverage ? ' --coverage' : '';
          logger.log('Запуск тестов в браузере', name);
 
-         await this._makeTestConfig({
-            name: name,
-            testModules: testModules || name,
-            path: configPath,
-            isBrowser: true
-         });
+         if (useJest) {
+            await this._makeJestTestConfig({
+               name: name,
+               testModules: testModules || name,
+               path: configPath,
+               isBrowser: true
+            });
+         } else {
+            await this._makeTestConfig({
+               name: name,
+               testModules: testModules || name,
+               path: configPath,
+               isBrowser: true
+            });
+         }
 
          if (this._options.server) {
             await Promise.all([
@@ -426,8 +535,9 @@ class Test extends Base {
                this._openBrowser(name)
             ]);
          } else {
+            const cliParam = useJest ? '--jest --env=jsdom' : '--browser';
             await this._executeBrowserTestCmd(
-               `node ${require.resolve('saby-units/cli.js')} --browser${coverage} --report --configUnits=${configPath}`,
+               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} --report --configUnits=${configPath}`,
                name,
                configPath,
                TEST_TIMEOUT
@@ -581,10 +691,15 @@ class Test extends Base {
       this._allowedErrorsSet = new Set(errors || []);
    }
 
-   _getUnknownArgs() {
+   _getUnknownArgs(ignoreArgs = []) {
+      // FIXME: ignoreArgs нужен, чтобы Jest не ругался на неизвестные параметры.
+      //  Выяснить, почему --tasks, --react остались необработанными и убрать фильтрацию.
       let args = [];
       Object.keys(this._options.argvOptions).forEach((name) => {
          if (!this._options.hasOwnProperty(name)) {
+            if (ignoreArgs.indexOf(name) > -1) {
+               return;
+            }
             let value = this._options.argvOptions[name];
             if (typeof value === 'boolean') {
                args.push(`--${name}`);
