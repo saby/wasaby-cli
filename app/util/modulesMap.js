@@ -62,7 +62,7 @@ class ModulesMap {
    }
 
    /**
-    * Возвращает модули от которых зависят модули из переданного массива
+    * Возвращает модули зависящие от модулей из переданного массива
     * @param {Array} modules - Массив с наваниями модулей
     * @return {Array}
     */
@@ -110,7 +110,7 @@ class ModulesMap {
     * Возвращает список необходимых модулей
     * @return {Array}
     */
-   getRequiredModules(modules) {
+   getRequiredModules() {
       if (this._modulesList) {
          return this._modulesList;
       }
@@ -141,30 +141,54 @@ class ModulesMap {
          list = this.getTestModulesByRep('all');
       }
 
-      if (modules && modules.length !== 0) {
-         list = this.filterUnitTestModules(list, modules);
-      }
-
       this._modulesList = list;
       return this._modulesList;
    }
 
-   filterUnitTestModules(modules, requiredModules) {
-      const result = new Set();
-
-      for (const moduleName of requiredModules) {
+   filterUnitTestModules(modules) {
+      return modules.filter((moduleName) => {
          const module = this._modulesMap.get(moduleName);
 
-         for (const unitModuleName of modules) {
-            const unitModule = this._modulesMap.get(unitModuleName);
+         return module && module.unitTest;
+      });
+   }
 
-            if (module.rep === unitModule.rep) {
-               result.add(unitModuleName);
+   getUnitsTestModules(modules) {
+      if (modules && modules.length !== 0) {
+         const repos = new Set();
+         let unitModules = [];
+
+         for (const name of modules) {
+            const module = this._modulesMap.get(name);
+
+            if (module) {
+               repos.add(module.rep);
             }
          }
+
+         for (const reposName of repos) {
+            unitModules = [...unitModules, ...this.getTestModulesByRep(reposName)]
+         }
+
+         return unitModules;
       }
 
-      return Array.from(result);
+      if (this._testRep.includes('all')) {
+         return this.getTestModulesByRep('all');
+      }
+
+      if (this._entry.length > 0) {
+         return this.filterUnitTestModules(this.getParentModules(this.getEntryModules()));
+      }
+
+      const result = new Set();
+      this._testRep.forEach((testRep) => {
+         for (const module of this.filterUnitTestModules(this.getParentModules(this.getModulesByRep(testRep)))) {
+            result.add(module);
+         }
+      });
+
+      return [...result];
    }
 
    //TODO Убрать когда возможность задать реализацию будет из корообки.

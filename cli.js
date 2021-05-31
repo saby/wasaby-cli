@@ -44,6 +44,7 @@ class Cli {
 
       // eslint-disable-next-line id-match
       logger.logFile = path.join(this._argvOptions.workspace || __dirname, LOG_FOLDER, `test-cli-${this.tasks.join('_')}.log`);
+      logger.logDir = path.join(this._argvOptions.workspace || __dirname, LOG_FOLDER);
 
       if (this._argvOptions.rep) {
          this._testRep = this._argvOptions.rep.split(',').map(name => name.trim());
@@ -51,7 +52,7 @@ class Cli {
          this._testRep = cfg.testRep;
          this._only = true;
       } else {
-         this._testRep = 'all';
+         this._testRep = ['all'];
       }
 
       if (this._argvOptions.projectDir || this._argvOptions.project) {
