@@ -2,6 +2,7 @@
   "displayName": null,
   "rootDir": null,
   "roots": null,
+  "moduleDirectories": null,
   "cacheDirectory": null,
   "testMatch": [
     "**/*.test.js"
