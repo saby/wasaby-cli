@@ -276,7 +276,8 @@ class Test extends Base {
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
          params.testModules
       );
-      throw new Error(`[SPY CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
+      console.log(`[SPY CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
+      console.log(`[SPY OPTIONS]::${JSON.stringify(this._options, null, ' ')}`);
       await fs.outputFile(
          params.path,
          JSON.stringify(cfg, null, 4)
