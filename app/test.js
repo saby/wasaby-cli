@@ -268,20 +268,38 @@ class Test extends Base {
     */
    async _getJestTestConfig(names, suffix, testModules) {
       const cfg = {...require('../jestTestConfig.base.json')};
+      // Директория, в которой производится запуск юнитов
+      const rootDir = process.cwd();
+      // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
+      const applicationDir = fsUtil.relative(rootDir, this._options.resources);
+      // Директория ветки, либо корневая директория локального репозитория
+      const workspace = fsUtil.relative(this._options.workDir, this._options.workspace) || '.';
+      // Директория, в которой хранятся артефакты
+      const artifactsDir = fsUtil.relative(rootDir, this._options.workspace);
+      // Директория, в которой хранится кеш для фреймворка Jest
+      const cacheDir = fsUtil.relative(rootDir, path.join(workspace, 'jest-cache'));
+
+      // Список директорий с тестами, находящимися в applicationDir
+      const currentTests = testModules instanceof Array ? testModules : [testModules];
+      const tests = currentTests.map(testDir => path.join(
+         '<rootDir>',
+         fsUtil.relative(
+            rootDir,
+            path.join(applicationDir, testDir)
+         )
+      ));
+
       cfg.displayName = `${names}`;
-      cfg.rootDir = process.cwd();
+      cfg.rootDir = rootDir;
       cfg.moduleDirectories = [
          'node_modules',
-         path.join(process.cwd(), 'application')
+         applicationDir
       ];
-
-      cfg.cacheDirectory = path.join(process.cwd(), 'application', 'jest-cache');
-      cfg.coverageDirectory = path.join(process.cwd(), 'application', 'jest-coverage');
-
-      const tests = testModules instanceof Array ? testModules : [testModules];
-      cfg.roots = tests.map(name => path.join('<rootDir>/application/', name));
+      cfg.cacheDirectory = cacheDir;
+      cfg.roots = tests;
 
       // TODO!!!
+      delete cfg['coverageDirectory'];
       delete cfg['collectCoverageFrom'];
       delete cfg['coverageReporters'];
 
