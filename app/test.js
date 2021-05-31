@@ -477,10 +477,13 @@ class Test extends Base {
                cliParam,
                coverage,
                report,
-               `--configUnits=${pathToConfig}`,
+               `--config=${pathToConfig}`,
                ...otherArguments
             ];
             if (useJest) {
+               const outputFile = this.getReportPath(`${name}${NODE_SUFFIX}`);
+               // Чтобы отчет сохранялся средствами jest-junit
+               args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
                args.push('--env=node');
             }
 
@@ -562,7 +565,7 @@ class Test extends Base {
          } else {
             const cliParam = useJest ? '--jest --env=jsdom' : '--browser';
             await this._executeBrowserTestCmd(
-               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} --report --configUnits=${configPath}`,
+               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} --report --config=${configPath}`,
                name,
                configPath,
                TEST_TIMEOUT
