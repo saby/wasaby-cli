@@ -22,12 +22,13 @@ const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 const JEST_FRAMEWORK_ENABLED = true;
 
 /**
- * Постепенно раскатаем jest по репозиториям, чтобы не ломать всё и сразу.
- * Запишем сюда имена репозиториев (name в package.json), чтобы понимать,
- * запускать unit-тесты с помощью mocha или jest.
+ * Постепенно раскатаем Jest по репозиториям, чтобы не ломать всё и сразу.
+ * Сюда запишем имена тех репозиториев (для локального запуска)
+ * и входящих в них тестовых UI-модулей (для запуска в Jenkins),
+ * чтобы понимать, что уже можно запускать под Jest, а что пока оставить под Mocha.
  */
 const JEST_REPO_NAMES = [
-   'saby-ui'
+   'saby-ui', 'UITest', 'ReactUnitTest'
 ];
 
 const _private = {
@@ -527,7 +528,8 @@ class Test extends Base {
          (moduleCfg && moduleCfg.testInBrowser) || !moduleCfg || this._testOnlyBrowser
       );
       if (canRunBrowserTests) {
-         const useJest = this._shouldRunJestFramework(name);
+         const moduleName = `${name}`;
+         const useJest = this._shouldRunJestFramework(moduleName);
          const configPath = useJest
             ? _private.getPathToJestTestConfig(name, true)
             : _private.getPathToTestConfig(name, true);
