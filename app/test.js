@@ -282,12 +282,9 @@ class Test extends Base {
 
       // Список директорий с тестами, находящимися в applicationDir
       const currentTests = testModules instanceof Array ? testModules : [testModules];
-      const tests = currentTests.map(testDir => path.join(
-         '<rootDir>',
-         fsUtil.relative(
-            rootDir,
-            path.join(applicationDir, testDir)
-         )
+      const tests = currentTests.map(testDir => fsUtil.relative(
+         rootDir,
+         path.join(applicationDir, testDir)
       ));
 
       cfg.displayName = `${names}`;
