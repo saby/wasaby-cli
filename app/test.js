@@ -19,7 +19,7 @@ const MAX_TEST_RESTART = 5;
 
 const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
-const JEST_FRAMEWORK_ENABLED = true;
+const JEST_FRAMEWORK_ENABLED = !true;
 
 /**
  * Постепенно раскатаем Jest по репозиториям, чтобы не ломать всё и сразу.
@@ -295,14 +295,13 @@ class Test extends Base {
       cfg.collectCoverage = !!this._options.coverage;
       cfg.coverageDirectory = coverageDirectory;
       cfg.coverageReporters = [
-         ["json", { file: 'coverage.json' }],
-         ["html", { subdir: 'coverage' }]
+         ['json', { file: 'coverage.json' }],
+         ['html', { subdir: 'coverage' }]
       ];
       if (this._options.only) {
-         cfg.coverageReporters.push("text");
+         cfg.coverageReporters.push('text');
       }
 
-      console.log(`[JEST CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
       return cfg;
    }
 
@@ -332,7 +331,6 @@ class Test extends Base {
 
             return diff.some(filePath => filePath.includes(moduleName + path.sep));
          }
-
          return true;
       }
    }
@@ -429,6 +427,14 @@ class Test extends Base {
       xml.writeXmlFile(this.getReportPath(moduleName), report);
    }
 
+   /**
+    * Запускает юниты на Jest
+    * @param name{String} Название модуля
+    * @param testModules {Array<String>} Модули с тестами
+    * @param isBrowser {Boolean} Флаг запуска тестов в окружении jsdom
+    * @returns {Promise<void>}
+    * @private
+    */
    async _startJestTest(name, testModules, isBrowser) {
       const suffix = isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
       const fullName = `${name}${suffix}`;
@@ -445,20 +451,21 @@ class Test extends Base {
          const outputFile = this.getReportPath(fullName);
          const otherArguments = this._getUnknownArgs(['tasks']);
          const jestEnv = isBrowser ? 'jsdom' : 'node';
-         let args = [
+         const args = [
             unitsPath,
             '--jest',
             `--config=${pathToConfig}`,
             `--env=${jestEnv}`,
-
-            // jest-junit xml file configuration
-            `--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`,
-            `--ENV_VAR-JEST_SUITE_NAME=Jest Unit Tests`,
-            `--ENV_VAR-JEST_JUNIT_SUITE_NAME=${fullName}.{title}`,
-            `--ENV_VAR-JEST_JUNIT_CLASSNAME={classname}`,
-            `--ENV_VAR-JEST_JUNIT_TITLE={title}`,
             ...otherArguments
          ];
+         if (this._report === 'xml') {
+            // jest-junit xml file configuration
+            args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
+            args.push(`--ENV_VAR-JEST_SUITE_NAME=Jest Unit Tests`);
+            args.push(`--ENV_VAR-JEST_JUNIT_SUITE_NAME=${fullName}.{title}`);
+            args.push(`--ENV_VAR-JEST_JUNIT_CLASSNAME={classname}`);
+            args.push(`--ENV_VAR-JEST_JUNIT_TITLE={title}`);
+         }
          // Чтобы отчет сохранялся средствами jest-junit
          if (!this._options.only) {
             args.push('--ci');
