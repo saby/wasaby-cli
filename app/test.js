@@ -272,8 +272,6 @@ class Test extends Base {
     */
    async _getJestTestConfig(names, suffix, testModules) {
       const cfg = {...require('../jestTestConfig.base.json')};
-      // Директория, в которой производится запуск юнитов
-      const rootDir = process.cwd();
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
       const applicationDir = this._options.resources;
       // Директория ветки, либо корневая директория локального репозитория для кеша и артефактов
@@ -285,16 +283,14 @@ class Test extends Base {
       const currentTests = testModules instanceof Array ? testModules : [testModules];
       const tests = currentTests.map(testDir => path.join(applicationDir, testDir));
 
-      cfg.displayName = `${names}`;
-      cfg.rootDir = rootDir;
+      cfg.displayName = `${names} ${suffix || ''}`;
+      cfg.rootDir = applicationDir;
       cfg.moduleDirectories = [
          'node_modules',
          applicationDir
       ];
       cfg.cacheDirectory = cacheDir;
       cfg.roots = tests;
-
-      delete cfg['rootDir'];
 
       // TODO!!!
       delete cfg['coverageDirectory'];
