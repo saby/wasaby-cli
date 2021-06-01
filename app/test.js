@@ -19,6 +19,17 @@ const MAX_TEST_RESTART = 5;
 
 const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
+const JEST_FRAMEWORK_ENABLED = true;
+
+/**
+ * Постепенно раскатаем jest по репозиториям, чтобы не ломать всё и сразу.
+ * Запишем сюда имена репозиториев (name в package.json), чтобы понимать,
+ * запускать unit-тесты с помощью mocha или jest.
+ */
+const JEST_REPO_NAMES = [
+   'saby-ui'
+];
+
 const _private = {
 
    /**
@@ -312,6 +323,16 @@ class Test extends Base {
    }
 
    /**
+    * Проверяет, нужно ли запускать юнит тесты под Jest
+    * @param moduleName {String} Название модуля
+    * @private
+    */
+   _shouldRunJestFramework(moduleName) {
+      console.log(`_shouldRunJestFramework(moduleName=${moduleName})`);
+      return JEST_FRAMEWORK_ENABLED && JEST_REPO_NAMES.indexOf(moduleName) > -1;
+   }
+
+   /**
     * Создает файл с конфигом для запуска юнит тестов
     * @param params - параметры для запуска юнит тестов
     * @returns {Promise<void>}
@@ -399,6 +420,9 @@ class Test extends Base {
    async _startNodeTest(name, testModules) {
       if (!this._testOnlyBrowser) {
          const processName = name + NODE_SUFFIX;
+         const moduleName = `${name}`;
+         console.log(`_startNodeTest(name[${typeof name}]=${name}, testModules=${testModules})`);
+         this._shouldRunJestFramework(moduleName);
          try {
             const pathToConfig = _private.getPathToTestConfig(name, false);
 
@@ -461,6 +485,9 @@ class Test extends Base {
                this._testOnlyBrowser
             )
       ) {
+         const moduleName = `${name}`;
+         console.log(`_startBrowserTest(name[${typeof name}]=${name}, testModules=${testModules})`);
+         this._shouldRunJestFramework(moduleName);
          const configPath = _private.getPathToTestConfig(name, true);
          const coverage = this._options.coverage ? ' --coverage' : '';
          logger.log('Запуск тестов в браузере', name);
