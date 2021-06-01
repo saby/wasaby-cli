@@ -291,6 +291,8 @@ class Test extends Base {
       cfg.cacheDirectory = cacheDir;
       cfg.roots = tests;
 
+      delete cfg['rootDir'];
+
       // TODO!!!
       delete cfg['coverageDirectory'];
       delete cfg['collectCoverageFrom'];
