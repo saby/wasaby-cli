@@ -272,20 +272,15 @@ class Test extends Base {
       // Директория, в которой производится запуск юнитов
       const rootDir = process.cwd();
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
-      const applicationDir = fsUtil.relative(rootDir, this._options.resources);
-      // Директория ветки, либо корневая директория локального репозитория
-      const workspace = fsUtil.relative(this._options.workDir, this._options.workspace) || '.';
-      // Директория, в которой хранятся артефакты
-      const artifactsDir = fsUtil.relative(rootDir, this._options.workspace);
+      const applicationDir = this._options.resources;
+      // Директория ветки, либо корневая директория локального репозитория для кеша и артефактов
+      const workspace = this._options.workspace || '.';
       // Директория, в которой хранится кеш для фреймворка Jest
-      const cacheDir = fsUtil.relative(rootDir, path.join(workspace, 'jest-cache'));
+      const cacheDir = path.join(workspace, 'jest-cache');
 
       // Список директорий с тестами, находящимися в applicationDir
       const currentTests = testModules instanceof Array ? testModules : [testModules];
-      const tests = currentTests.map(testDir => fsUtil.relative(
-         rootDir,
-         path.join(applicationDir, testDir)
-      ));
+      const tests = currentTests.map(testDir => path.join(applicationDir, testDir));
 
       cfg.displayName = `${names}`;
       cfg.rootDir = rootDir;
@@ -483,6 +478,9 @@ class Test extends Base {
                // Чтобы отчет сохранялся средствами jest-junit
                args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
                args.push('--env=node');
+               if (!this._options.only) {
+                  args.push('--ci');
+               }
             }
 
             await this._shell.spawn(
@@ -563,8 +561,9 @@ class Test extends Base {
             ]);
          } else {
             const cliParam = useJest ? '--jest --env=jsdom' : '--browser';
+            const ciParam = useJest && !this._options.only ? '--ci' : '';
             await this._executeBrowserTestCmd(
-               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} --report --config=${configPath}`,
+               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} ${ciParam} --report --config=${configPath}`,
                name,
                configPath,
                TEST_TIMEOUT
