@@ -268,19 +268,20 @@ class Test extends Base {
     * @private
     */
    async _getJestTestConfig(names, suffix, testModules) {
+      const fullName = `${names}${suffix || ''}`;
       const cfg = {...require('../jestTestConfig.base.json')};
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
       const applicationDir = this._options.resources;
       // Директория ветки, либо корневая директория локального репозитория для кеша и артефактов
       const workspace = this._options.workspace || '.';
+      const coverageDirectory = path.join(workspace, 'artifacts', fullName);
       // Директория, в которой хранится кеш для фреймворка Jest
       const cacheDir = path.join(workspace, 'jest-cache');
-
       // Список директорий с тестами, находящимися в applicationDir
       const currentTests = testModules instanceof Array ? testModules : [testModules];
       const tests = currentTests.map(testDir => path.join(applicationDir, testDir));
 
-      cfg.displayName = `${names} ${suffix || ''}`;
+      cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
       cfg.moduleDirectories = [
          'node_modules',
@@ -288,11 +289,15 @@ class Test extends Base {
       ];
       cfg.cacheDirectory = cacheDir;
       cfg.roots = tests;
-
-      // TODO!!!
-      delete cfg['coverageDirectory'];
-      delete cfg['collectCoverageFrom'];
-      delete cfg['coverageReporters'];
+      cfg.collectCoverage = !!this._options.coverage;
+      cfg.coverageDirectory = coverageDirectory;
+      cfg.coverageReporters = [
+         ["json", { file: 'coverage.json' }],
+         ["html", { subdir: 'coverage' }]
+      ];
+      if (this._options.only) {
+         cfg.coverageReporters.push("text");
+      }
 
       console.log(`[JEST CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
       return cfg;
