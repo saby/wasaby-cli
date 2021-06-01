@@ -298,6 +298,7 @@ class Test extends Base {
       delete cfg['collectCoverageFrom'];
       delete cfg['coverageReporters'];
 
+      console.log(`[JEST CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
       return cfg;
    }
 
