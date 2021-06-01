@@ -452,7 +452,13 @@ class Test extends Base {
             '--jest',
             `--config=${pathToConfig}`,
             `--env=${jestEnv}`,
+
+            // jest-junit xml file configuration
             `--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`,
+            `--ENV_VAR-JEST_SUITE_NAME=${fullName}`,
+            `--ENV_VAR-JEST_JUNIT_SUITE_NAME={title}`,
+            `--ENV_VAR-JEST_JUNIT_CLASSNAME={classname}`,
+            `--ENV_VAR-JEST_JUNIT_TITLE={title}`,
             ...otherArguments
          ];
          // Чтобы отчет сохранялся средствами jest-junit
