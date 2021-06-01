@@ -14,7 +14,8 @@ const RELEASE_FLAGS = {
    minimize: true,
    wml: true,
    customPack: true,
-   dependenciesGraph: true
+   dependenciesGraph: true,
+   htmlWml: true
 };
 const HOT_RELOAD_PORT = 10777;
 /**
