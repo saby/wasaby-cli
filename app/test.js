@@ -431,6 +431,63 @@ class Test extends Base {
       xml.writeXmlFile(this.getReportPath(moduleName), report);
    }
 
+   async _startJestTest(name, testModules, isBrowser) {
+      const suffix = isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
+      const fullName = `${name}${suffix}`;
+      try {
+         const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
+         await this._makeJestTestConfig({
+            name: name,
+            testModules: testModules || name,
+            path: pathToConfig,
+            isBrowser: isBrowser
+         });
+
+         const unitsPath = require.resolve('saby-units/cli.js');
+         const outputFile = this.getReportPath(fullName);
+         const otherArguments = this._getUnknownArgs(['tasks']);
+         const jestEnv = isBrowser ? 'jsdom' : 'node';
+         let args = [
+            unitsPath,
+            '--jest',
+            `--config=${pathToConfig}`,
+            `--env=${jestEnv}`,
+            `--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`,
+            ...otherArguments
+         ];
+         // Чтобы отчет сохранялся средствами jest-junit
+         if (!this._options.only) {
+            args.push('--ci');
+         }
+
+         await this._shell.spawn(
+            'node',
+            args,
+            {
+               processName: fullName,
+               timeout: TEST_TIMEOUT,
+               silent: this._report === 'console',
+               stdio: this._report === 'console' ? 'inherit' : 'pipe'
+            }
+         );
+
+         // todo разобраться почему ошибки без стека, пока такие не учитываем
+         this._testErrors[fullName] = this._shell.getErrorsByName(fullName);
+         if (this._testErrors[fullName]) {
+            this._testErrors[fullName] = this._testErrors[fullName].filter(msg => msg.includes('Stack:'));
+         }
+      } catch (e) {
+         this._testErrors[fullName] = e;
+      } finally {
+         if (this._shouldUpdateAllowedErrors) {
+            this._testErrors[fullName].map((msg) => {
+               this._allowedErrorsSet.add(this._getErrorText(msg));
+               return undefined;
+            });
+         }
+      }
+   }
+
    /**
     * Запускает юниты под нодой
     * @param {String} name - Название модуля
@@ -441,51 +498,31 @@ class Test extends Base {
    async _startNodeTest(name, testModules) {
       if (!this._testOnlyBrowser) {
          const moduleName = `${name}`;
-         const useJest = this._shouldRunJestFramework(moduleName);
          const processName = moduleName + NODE_SUFFIX;
+         if (this._shouldRunJestFramework(moduleName)) {
+            return this._startJestTest(name, testModules, false);
+         }
          try {
-            const pathToConfig = useJest
-               ? _private.getPathToJestTestConfig(name, false)
-               : _private.getPathToTestConfig(name, false);
+            const pathToConfig = _private.getPathToTestConfig(name, false);
+            await this._makeTestConfig({
+               name: name,
+               testModules: testModules || name,
+               path: pathToConfig,
+               isBrowser: false
+            });
 
-            if (useJest) {
-               await this._makeJestTestConfig({
-                  name: name,
-                  testModules: testModules || name,
-                  path: pathToConfig,
-                  isBrowser: false
-               });
-            } else {
-               await this._makeTestConfig({
-                  name: name,
-                  testModules: testModules || name,
-                  path: pathToConfig,
-                  isBrowser: false
-               });
-            }
-
+            const unitsPath = require.resolve('saby-units/cli.js');
             const coverage = this._options.coverage ? '--coverage' : '';
             const report = this._report === 'xml' ? '--report' : '';
-            const unitsPath = require.resolve('saby-units/cli.js');
-            const cliParam = useJest ? '--jest' : '--isolated';
             const otherArguments = this._getUnknownArgs(['tasks']);
             let args = [
                unitsPath,
-               cliParam,
+               '--isolated',
+               `--config=${pathToConfig}`,
                coverage,
                report,
-               `--config=${pathToConfig}`,
                ...otherArguments
             ];
-            if (useJest) {
-               const outputFile = this.getReportPath(`${name}${NODE_SUFFIX}`);
-               // Чтобы отчет сохранялся средствами jest-junit
-               args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
-               args.push('--env=node');
-               if (!this._options.only) {
-                  args.push('--ci');
-               }
-            }
 
             await this._shell.spawn(
                'node',
@@ -530,28 +567,19 @@ class Test extends Base {
       );
       if (canRunBrowserTests) {
          const moduleName = `${name}`;
-         const useJest = this._shouldRunJestFramework(moduleName);
-         const configPath = useJest
-            ? _private.getPathToJestTestConfig(name, true)
-            : _private.getPathToTestConfig(name, true);
+         if (this._shouldRunJestFramework(moduleName)) {
+            return this._startJestTest(name, testModules, true);
+         }
+         const configPath = _private.getPathToTestConfig(name, true);
          const coverage = this._options.coverage ? ' --coverage' : '';
          logger.log('Запуск тестов в браузере', name);
 
-         if (useJest) {
-            await this._makeJestTestConfig({
-               name: name,
-               testModules: testModules || name,
-               path: configPath,
-               isBrowser: true
-            });
-         } else {
-            await this._makeTestConfig({
-               name: name,
-               testModules: testModules || name,
-               path: configPath,
-               isBrowser: true
-            });
-         }
+         await this._makeTestConfig({
+            name: name,
+            testModules: testModules || name,
+            path: configPath,
+            isBrowser: true
+         });
 
          if (this._options.server) {
             await Promise.all([
@@ -564,10 +592,8 @@ class Test extends Base {
                this._openBrowser(name)
             ]);
          } else {
-            const cliParam = useJest ? '--jest --env=jsdom' : '--browser';
-            const ciParam = useJest && !this._options.only ? '--ci' : '';
             await this._executeBrowserTestCmd(
-               `node ${require.resolve('saby-units/cli.js')} ${cliParam} ${coverage} ${ciParam} --report --config=${configPath}`,
+               `node ${require.resolve('saby-units/cli.js')} --browser ${coverage} --report --config=${configPath}`,
                name,
                configPath,
                TEST_TIMEOUT
