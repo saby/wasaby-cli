@@ -8,12 +8,15 @@
     "**/*.test.js"
   ],
 
-  "collectCoverage": false,
+  "collectCoverage": true,
   "collectCoverageFrom": [
-    "*.js"
+    "**/*.{js,jsx}",
+    "!**/node_modules/**"
   ],
   "coverageDirectory": null,
-  "coverageReporters": null,
+  "coverageReporters": [
+    "json", "html"
+  ],
 
   "errorOnDeprecated": false,
   "slowTestThreshold": 5,
