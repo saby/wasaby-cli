@@ -355,6 +355,7 @@ class Test extends Base {
       console.log(`[SPY MOCHA CONFIG]::${JSON.stringify(cfg, null, ' ')}`);
       console.log(`[SPY JEST CONFIG]::${JSON.stringify(jestCfg, null, ' ')}`);
       console.log(`[SPY OPTIONS]::${JSON.stringify(this._options, null, ' ')}`);
+      console.log(`[SPY MODULES]::${JSON.stringify(this._modulesMap, null, ' ')}`);
       await fs.outputFile(
          params.path,
          JSON.stringify(cfg, null, 4)
