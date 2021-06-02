@@ -84,7 +84,7 @@ const _private = {
     * @private
     */
    getPathToTestConfig: (repName, isBrowser) => {
-      const browser = isBrowser ? '_browser' : '';
+      const browser = isBrowser ? BROWSER_SUFFIX : '';
       return fsUtil.relative(
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `testConfig_${repName}${browser}.json`))
@@ -99,7 +99,7 @@ const _private = {
     * @private
     */
    getPathToJestTestConfig: (repName, isBrowser) => {
-      const browser = isBrowser ? '_browser' : '';
+      const browser = isBrowser ? BROWSER_SUFFIX : '';
       return fsUtil.relative(
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `jestTestConfig_${repName}${browser}.json`))
