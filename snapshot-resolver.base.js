@@ -1,5 +1,5 @@
-const BUILD_DIRECTORY = '/*#BUILD_DIRECTORY#*/'; // ends with path separator
-const SOURCE_DIRECTORY = '/*#SOURCE_DIRECTORY#*/'; // ends with path separator
+const BUILD_DIRECTORY = '/*#BUILD_DIRECTORY#*/';
+const SOURCE_DIRECTORY = '/*#SOURCE_DIRECTORY#*/';
 const BUILD_MODULES = [/*#BUILD_MODULES#*/];
 
 function isKnownModule(path) {
