@@ -19,7 +19,7 @@ const MAX_TEST_RESTART = 5;
 
 const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
-const JEST_FRAMEWORK_ENABLED = !true;
+const JEST_FRAMEWORK_ENABLED = true;
 
 /**
  * Постепенно раскатаем Jest по репозиториям, чтобы не ломать всё и сразу.
