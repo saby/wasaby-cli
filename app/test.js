@@ -14,6 +14,7 @@ const NODE_SUFFIX = '_node';
 const PARALLEL_TEST_COUNT = 2;
 const TEST_TIMEOUT = 60 * 5 * 1000;
 const REPORT_PATH = '{workspace}/artifacts/{module}/xunit-report.xml';
+const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
 const ALLOWED_ERRORS_FILE = path.normalize(path.join(__dirname, '..', 'resources', 'allowedErrors.json'));
 const MAX_TEST_RESTART = 5;
 
@@ -268,9 +269,10 @@ class Test extends Base {
     * @param {String|Array<String>} names - Название репозитория
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
+    * @param {String} snapshotResolverPath - путь к резолверу снимков
     * @private
     */
-   async _getJestTestConfig(names, suffix, testModules) {
+   async _getJestTestConfig(names, suffix, testModules, snapshotResolverPath) {
       const fullName = `${names}${suffix || ''}`;
       const cfg = {...require('../jestTestConfig.base.json')};
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
@@ -293,6 +295,9 @@ class Test extends Base {
       cfg.cacheDirectory = cacheDir;
       cfg.roots = tests;
       cfg.collectCoverage = !!this._options.coverage;
+      cfg.collectCoverageFrom = [
+         '**/*.{js,jsx}'
+      ];
       cfg.coverageDirectory = coverageDirectory;
       cfg.coverageReporters = [
          ['json', { file: 'coverage.json' }],
@@ -301,7 +306,7 @@ class Test extends Base {
       if (this._options.only) {
          cfg.coverageReporters.push('text');
       }
-
+      cfg.snapshotResolver = snapshotResolverPath;
       return cfg;
    }
 
@@ -362,6 +367,28 @@ class Test extends Base {
       );
    }
 
+   async _makeJestSnapshotResolver(resolverPath) {
+      const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
+      const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
+
+      const buildDirectory = this._options.resources;
+      const sourceDirectory = this._options.only ? process.cwd() : this._options.store;
+      const buildModules = JSON.stringify(this._modulesMap._modulesList, null, ' ').slice(1, -1);
+      const testUIModuleName = this._modulesMap._modulesList[0];
+      const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'component/index.js');
+
+      const resolverSource = baseResolverSource
+         .replace('/*#BUILD_DIRECTORY#*/', buildDirectory)
+         .replace('/*#SOURCE_DIRECTORY#*/', sourceDirectory)
+         .replace('/*#BUILD_MODULES#*/', buildModules)
+         .replace('/*#TEST_PATH_FOR_CONSISTENCY_CHECK#*/', testPathForConsistencyCheck);
+
+      await fs.outputFile(
+         resolverPath,
+         resolverSource
+      );
+   }
+
    /**
     * Создает файл с Jest конфигом для запуска юнит тестов
     * @param params - параметры для запуска юнит тестов
@@ -372,7 +399,8 @@ class Test extends Base {
       const cfg = await this._getJestTestConfig(
          params.name,
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
-         params.testModules
+         params.testModules,
+         params.snapshotResolverPath
       );
       await fs.outputFile(
          params.path,
@@ -439,12 +467,16 @@ class Test extends Base {
       const suffix = isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
       const fullName = `${name}${suffix}`;
       try {
+         const snapshotResolverPath = path.join(__dirname, '..', SNAPSHOT_RESOLVER_FILENAME);
+         await this._makeJestSnapshotResolver(snapshotResolverPath);
+
          const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
          await this._makeJestTestConfig({
             name: name,
             testModules: testModules || name,
             path: pathToConfig,
-            isBrowser: isBrowser
+            isBrowser: isBrowser,
+            snapshotResolverPath: snapshotResolverPath
          });
 
          const unitsPath = require.resolve('saby-units/cli.js');
