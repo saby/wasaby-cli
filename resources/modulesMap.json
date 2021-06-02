@@ -3492,7 +3492,6 @@
       "Controls",
       "Layout",
       "Controls-devtools-theme",
-      "Debugging-devtools-theme",
       "Layout-devtools-theme"
     ],
     "id": "61cc9fd1-7bf3-43d0-9905-54dbe6b084bb",
@@ -3532,7 +3531,6 @@
       "Controls",
       "Layout",
       "Controls-devtools-theme",
-      "DependencyWatcher-devtools-theme",
       "Layout-devtools-theme"
     ],
     "id": "8768d783-37e7-4f0d-a476-16766b4635b8",
@@ -3577,12 +3575,6 @@
       "Debugging",
       "Focus",
       "Controls-devtools-theme",
-      "Debugging-devtools-theme",
-      "DependencyWatcher-devtools-theme",
-      "Devtool-devtools-theme",
-      "Elements-devtools-theme",
-      "Profiler-devtools-theme",
-      "Focus-devtools-theme",
       "WasabyLoader"
     ],
     "id": "8fc415e2-ad25-4452-aabb-a94e0e290dfe",
@@ -3624,7 +3616,6 @@
       "Search",
       "Extension",
       "Controls-devtools-theme",
-      "Elements-devtools-theme",
       "LogicParentPanel"
     ],
     "id": "c7af5b1b-ad28-4cf8-ba55-c892c0b59245",
@@ -3691,8 +3682,7 @@
       "Layout",
       "Search",
       "Extension",
-      "Controls-devtools-theme",
-      "Profiler-devtools-theme"
+      "Controls-devtools-theme"
     ],
     "id": "0bad3dc3-e17e-441f-a91e-7aecf37867f1",
     "required": false,
@@ -4117,6 +4107,7 @@
       "ExtControls",
       "ExtControls-default-theme",
       "ServiceUpdateNotifier",
+      "App",
       "Configuration",
       "WidgetsPage"
     ],
@@ -4512,8 +4503,7 @@
       "UI",
       "Controls",
       "Extension",
-      "Elements",
-      "Focus-devtools-theme"
+      "Elements"
     ],
     "id": "14fc0dc0-9b76-4e5e-97b7-696a82b8d545",
     "required": true,
@@ -4869,6 +4859,7 @@
     "entry": false,
     "depends": [
       "Controls",
+      "SBIS3.NAVIGATION",
       "Controls-default-theme",
       "Types",
       "Carousel",
@@ -5055,7 +5046,8 @@
       "DOCVIEW3Core",
       "SiteEditorExternal",
       "PTComponents",
-      "Name"
+      "Name",
+      "Application"
     ],
     "id": "271dc56d-1fdc-44e3-8736-282224349e0f",
     "required": true,
@@ -5402,7 +5394,8 @@
       "NavigationPanels-default-theme",
       "SiteEditor",
       "SiteEditorExternal",
-      "SiteEditorLayout"
+      "SiteEditorLayout",
+      "Carousel"
     ],
     "id": "fb9595df-9f07-4098-983b-b52cc3f8bf58",
     "required": false,
@@ -5422,7 +5415,9 @@
       "Types",
       "SiteEditorExternal",
       "Headers",
-      "Headers-default-theme"
+      "Headers-default-theme",
+      "ExtControls",
+      "SiteEditorBase"
     ],
     "id": "3c060a69-2ff5-40ad-b2f5-a1c0f5f9cfc9",
     "required": false,
