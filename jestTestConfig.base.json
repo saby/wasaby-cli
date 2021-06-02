@@ -30,5 +30,5 @@
   "maxConcurrency": 5,
   "maxWorkers": "50%",
   "testFailureExitCode": 1,
-  "testTimeout": 5000
+  "testTimeout": 10000
 }
