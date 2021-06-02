@@ -368,10 +368,11 @@ class Test extends Base {
       const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
-      const buildDirectory = this._options.resources;
-      const sourceDirectory = this._options.only ? process.cwd() : this._options.store;
-      const buildModules = JSON.stringify(this._modulesMap._modulesList, null, ' ').slice(1, -1);
-      const testUIModuleName = this._modulesMap._modulesList[0];
+      const buildDirectory = this._options.resources + path.sep;
+      const sourceDirectory = (this._options.only ? process.cwd() : this._options.store) + path.sep;
+      const buildModulePaths = this._modulesMap._modulesList.map(name => name + path.sep);
+      const buildModules = JSON.stringify(buildModulePaths, null, ' ').slice(1, -1);
+      const testUIModuleName = buildModulePaths[0];
       const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'component/index.js');
 
       const resolverSource = baseResolverSource
