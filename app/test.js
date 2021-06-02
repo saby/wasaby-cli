@@ -484,7 +484,7 @@ class Test extends Base {
 
          const unitsPath = require.resolve('saby-units/cli.js');
          const outputFile = this.getReportPath(fullName);
-         const otherArguments = this._getUnknownArgs(['tasks']);
+         const otherArguments = this._getUnknownArgs(['tasks', 'copy', 'react']);
          const jestEnv = isBrowser ? 'jsdom' : 'node';
          const args = [
             unitsPath,
@@ -792,7 +792,7 @@ class Test extends Base {
 
    _getUnknownArgs(ignoreArgs = []) {
       // FIXME: ignoreArgs нужен, чтобы Jest не ругался на неизвестные параметры.
-      //  Выяснить, почему --tasks, --react остались необработанными и убрать фильтрацию.
+      //  Выяснить, почему --tasks, --react, --copy остались необработанными и убрать фильтрацию.
       let args = [];
       Object.keys(this._options.argvOptions).forEach((name) => {
          if (!this._options.hasOwnProperty(name)) {
