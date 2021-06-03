@@ -375,15 +375,20 @@ class Test extends Base {
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
       const buildDirectory = this._options.resources + path.sep;
-      const sourceDirectory = (this._options.only ? process.cwd() : this._options.store) + path.sep;
-      const buildModulePaths = this._modulesMap._modulesList.map(name => name + path.sep);
+      const sourceModulePaths = this._modulesMap._modulesList.map(
+         (name) => this._modulesMap._modulesMap.get(name).path + path.sep
+      );
+      const buildModulePaths = this._modulesMap._modulesList.map(
+         (name) => path.join(buildDirectory, name) + path.sep
+      );
+      const sourceModules = JSON.stringify(sourceModulePaths, null, ' ').slice(1, -1);
       const buildModules = JSON.stringify(buildModulePaths, null, ' ').slice(1, -1);
+
       const testUIModuleName = buildModulePaths[0];
-      const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'component/index.js');
+      const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'Component/index.js');
 
       const resolverSource = baseResolverSource
-         .replace('/*#BUILD_DIRECTORY#*/', buildDirectory)
-         .replace('/*#SOURCE_DIRECTORY#*/', sourceDirectory)
+         .replace('/*#SOURCE_MODULES#*/', sourceModules)
          .replace('/*#BUILD_MODULES#*/', buildModules)
          .replace('/*#TEST_PATH_FOR_CONSISTENCY_CHECK#*/', testPathForConsistencyCheck);
 
