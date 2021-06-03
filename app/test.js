@@ -294,7 +294,7 @@ class Test extends Base {
       if (this._options.only) {
          // если тесты запускаются только по одному репозиторию то не разделяем их по модулям
          logger.log('Запуск тестов', this._options.testRep);
-         let modules = this._modulesMap.getTestModulesByRep(this._options.testRep);
+         let modules = this._modulesMap.getTestModulesByRep(this._options.testRep[0]);
 
          return Promise.all([
             this._startNodeTest(this._options.testRep, modules),
