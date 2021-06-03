@@ -101,6 +101,10 @@
          "mirror": "git.sbis.ru",
          "url": "root/sbis3-docview"
       },
+      "printforms_pt-components": {
+         "mirror": "git.sbis.ru",
+         "url": "printforms/pt-components"
+      },
       "saby-devtool": {
          "url": "saby/devtools"
       },
