@@ -304,6 +304,9 @@ class Test extends Base {
          cfg.coverageReporters.push('text');
       }
       cfg.snapshotResolver = snapshotResolverPath;
+
+      console.log(`[JEST CONFIG]`);
+      console.log(JSON.stringify(cfg, null, ' '));
       return cfg;
    }
 
