@@ -97,6 +97,10 @@
          "mirror": "git.sbis.ru",
          "url": "sbis/rmi_test"
       },
+      "sbis3_docview": {
+         "mirror": "git.sbis.ru",
+         "url": "root/sbis3-docview"
+      },
       "saby-devtool": {
          "url": "saby/devtools"
       },
