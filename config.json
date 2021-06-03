@@ -105,6 +105,10 @@
          "mirror": "git.sbis.ru",
          "url": "printforms/pt-components"
       },
+      "printforms_templateeditor": {
+         "mirror": "git.sbis.ru",
+         "url": "printforms/templateeditor"
+      },
       "saby-devtool": {
          "url": "saby/devtools"
       },
