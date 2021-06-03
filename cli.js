@@ -144,7 +144,7 @@ class Cli {
          projectPath: this._projectPath,
          resources: this._resources
       });
-
+      throw "Test init Error";
       await store.run();
    }
 
