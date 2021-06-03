@@ -1,14 +1,13 @@
-const BUILD_DIRECTORY = '/*#BUILD_DIRECTORY#*/';
-const SOURCE_DIRECTORY = '/*#SOURCE_DIRECTORY#*/';
+const SOURCE_MODULES = [/*#SOURCE_MODULES#*/];
 const BUILD_MODULES = [/*#BUILD_MODULES#*/];
 
-function isKnownModule(path) {
-   for (let index = 0; index < BUILD_MODULES.length; ++index) {
-      if (path.startsWith(BUILD_MODULES[index])) {
-         return true;
+function resolvePath(src, dst, path) {
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
       }
    }
-   return false;
+   return path;
 }
 
 // Resolve snapshot file.
@@ -18,15 +17,7 @@ function isKnownModule(path) {
 // @param {string} testPath Test file path.
 // @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
 function resolveSnapshotPath(testPath, snapshotExtension) {
-   const defaultResult = testPath + snapshotExtension;
-   if (!testPath.startsWith(BUILD_DIRECTORY)) {
-      return defaultResult;
-   }
-   const restPath = testPath.slice(BUILD_DIRECTORY.length);
-   if (!isKnownModule(restPath)) {
-      return defaultResult;
-   }
-   return SOURCE_DIRECTORY + restPath + snapshotExtension;
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
 }
 
 // Resolve test file path.
@@ -36,15 +27,7 @@ function resolveSnapshotPath(testPath, snapshotExtension) {
 // @param {string} snapshotFilePath Snapshot file path.
 // @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
 function resolveTestPath(snapshotFilePath, snapshotExtension) {
-   const defaultResult = snapshotFilePath.slice(0, -snapshotExtension.length);
-   if (!snapshotFilePath.startsWith(SOURCE_DIRECTORY)) {
-      return defaultResult;
-   }
-   const restPath = snapshotFilePath.slice(SOURCE_DIRECTORY.length);
-   if (!isKnownModule(restPath)) {
-      return defaultResult;
-   }
-   return BUILD_DIRECTORY + restPath.slice(0, -snapshotExtension.length);
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
 }
 
 // resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck

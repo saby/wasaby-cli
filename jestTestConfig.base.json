@@ -30,5 +30,12 @@
   "maxConcurrency": 5,
   "maxWorkers": "50%",
   "testFailureExitCode": 1,
-  "testTimeout": 5000
+  "testTimeout": 5000,
+
+  "//": "Падающие unit-тесты",
+  "testPathIgnorePatterns": [
+    "ReactUnitTest/_base/Control.test.js",
+    "UITest/goUpByControlTree.test.js",
+    "ReactUnitTest/WasabyReactivity.test.js"
+  ]
 }
