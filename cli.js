@@ -129,6 +129,7 @@ class Cli {
          //TODO Убрать когда возможность задать реализацию будет из корообки.
          isReact: this._argvOptions.react,
       });
+      throw "Test build Error";
       await build.run();
    }
 
@@ -144,7 +145,7 @@ class Cli {
          projectPath: this._projectPath,
          resources: this._resources
       });
-      throw "Test init Error";
+
       await store.run();
    }
 
