@@ -130,7 +130,8 @@ function serverSideRender(req, res, config) {
       reactApp: config.reactApp,
       _options: {
          preInitScript: `window.wsConfig.debug = ${config.isDebug};window.wsConfig.userConfigSupport = false;`
-      }
+      },
+      doNotCheckModuleInContents: true
    }
    const onSuccessHandler = function (html) {
       res.writeHead(200, {'Content-Type': 'text/html'});
