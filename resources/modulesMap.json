@@ -470,7 +470,8 @@
       "Controls-default-theme",
       "File",
       "SbisFile",
-      "Permission"
+      "Permission",
+      "Hint"
     ],
     "id": "576933f2-cd95-4f0e-8076-938026d35de3",
     "required": true,
@@ -2907,16 +2908,16 @@
     "useModuleMap": false,
     "entry": false,
     "depends": [
-      "Antibot",
-      "Криптография",
       "WS.Core",
-      "AuthFramework",
       "SBIS3.CONTROLS",
-      "Controls-default-theme",
-      "RequireJsLoader"
+      "Antibot",
+      "RequireJsLoader",
+      "AuthFramework",
+      "Cryptography",
+      "Controls-default-theme"
     ],
     "id": "6f73d18e-2da9-453b-8877-92f47a2e857c",
-    "required": false,
+    "required": true,
     "forCDN": false
   },
   "AuthenticationCarryOffline": {
@@ -3098,6 +3099,8 @@
     "entry": false,
     "depends": [
       "AuthFramework",
+      "EngineUser",
+      "Hint",
       "WS.Core",
       "SBIS3.CONTROLS",
       "Types",
@@ -5387,12 +5390,7 @@
       "Types",
       "RequireJsLoader",
       "Permission",
-      "File",
       "UI",
-      "Layout",
-      "NavigationPanels",
-      "NavigationPanels-default-theme",
-      "SiteEditor",
       "SiteEditorExternal",
       "SiteEditorLayout",
       "Carousel"
