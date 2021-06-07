@@ -270,9 +270,10 @@ class Test extends Base {
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
     * @param {String} snapshotResolverPath - путь к резолверу снимков
+    * @param {Number} port - порт для раздачи статики
     * @private
     */
-   async _getJestTestConfig(names, suffix, testModules, snapshotResolverPath) {
+   async _getJestTestConfig(names, suffix, testModules, snapshotResolverPath, port) {
       const fullName = `${names}${suffix || ''}`;
       const cfg = {...require('../jestTestConfig.base.json')};
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
@@ -307,6 +308,8 @@ class Test extends Base {
          cfg.coverageReporters.push('text');
       }
       cfg.snapshotResolver = snapshotResolverPath;
+      cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
+      cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
 
       console.log(`[JEST CONFIG]`);
       console.log(JSON.stringify(cfg, null, ' '));
@@ -409,7 +412,8 @@ class Test extends Base {
          params.name,
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
          params.testModules,
-         params.snapshotResolverPath
+         params.snapshotResolverPath,
+         params.port
       );
       await fs.outputFile(
          params.path,
@@ -479,13 +483,15 @@ class Test extends Base {
          const snapshotResolverPath = path.join(__dirname, '..', SNAPSHOT_RESOLVER_FILENAME);
          await this._makeJestSnapshotResolver(snapshotResolverPath);
 
+         const port = await getPort();
          const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
          await this._makeJestTestConfig({
             name: name,
             testModules: testModules || name,
             path: pathToConfig,
             isBrowser: isBrowser,
-            snapshotResolverPath: snapshotResolverPath
+            snapshotResolverPath: snapshotResolverPath,
+            port: port
          });
 
          const unitsPath = require.resolve('saby-units/cli.js');
@@ -510,6 +516,10 @@ class Test extends Base {
          // Чтобы отчет сохранялся средствами jest-junit
          if (!this._options.only) {
             args.push('--ci');
+         }
+
+         if (isBrowser) {
+            args.push(`--port=${port}`);
          }
 
          await this._shell.spawn(
