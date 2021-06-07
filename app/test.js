@@ -311,8 +311,10 @@ class Test extends Base {
       cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
       cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
 
-      console.log(`[JEST CONFIG]`);
-      console.log(JSON.stringify(cfg, null, ' '));
+      if (this._options.only) {
+         logger.log(`[JEST CONFIG]`);
+         logger.log(JSON.stringify(cfg, null, ' '));
+      }
       return cfg;
    }
 
@@ -520,6 +522,7 @@ class Test extends Base {
 
          if (isBrowser) {
             args.push(`--port=${port}`);
+            args.push(`--root=${this._options.resources}`);
          }
 
          await this._shell.spawn(
