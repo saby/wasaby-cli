@@ -143,7 +143,6 @@
       "Calculator",
       "Calculator-default-theme",
       "Controls-onlinenavigation-theme",
-      "NavigationPanels-onlinenavigation-theme",
       "RichEditor",
       "EngineUser",
       "Hint",
@@ -156,7 +155,6 @@
       "LongOperations-default-theme",
       "Name",
       "Name-default-theme",
-      "NavigationPanels",
       "EngineLanguage",
       "UserStatus",
       "Summation",
@@ -165,7 +163,6 @@
       "Wizard-default-theme",
       "RichEditor-default-theme",
       "EngineUser-default-theme",
-      "NavigationPanels-default-theme",
       "Export",
       "Export-default-theme",
       "Import",
@@ -192,7 +189,9 @@
       "EngineLink",
       "DemoStand",
       "SiteEditorBase",
-      "TextEditor"
+      "TextEditor",
+      "MassEditing",
+      "MassEditing-default-theme"
     ],
     "id": "a7909725-2310-4cd7-857b-10bfd68f6758",
     "required": false,
@@ -5223,7 +5222,7 @@
       "Controls-default-theme",
       "MassEditing"
     ],
-    "id": "91bdd952-5414-44d2-8344-762240a6917e",
+    "id": "30b97f39-940b-4511-889b-f889e3c147ba",
     "required": true,
     "forCDN": false
   },
@@ -5368,7 +5367,8 @@
       "BaseWidget",
       "Hint",
       "Browser",
-      "SbisEnvUI"
+      "SbisEnvUI",
+      "SabyPage"
     ],
     "id": "b98a4426-27ed-4bd0-8b48-e8c9050582e7",
     "required": true,
@@ -5419,6 +5419,21 @@
     ],
     "id": "3c060a69-2ff5-40ad-b2f5-a1c0f5f9cfc9",
     "required": false,
+    "forCDN": false
+  },
+  "Informers-demo": {
+    "s3mod": "engine_informers\\client\\Informers-demo\\Informers-demo.s3mod",
+    "name": "Informers-demo",
+    "path": "engine_informers\\client\\Informers-demo",
+    "rep": "engine_informers",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Informers",
+      "Controls-default-theme"
+    ],
+    "id": "6ea15e7e-4021-41f5-8bf2-983a797a8897",
+    "required": true,
     "forCDN": false
   }
 }
