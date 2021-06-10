@@ -76,15 +76,7 @@ class Prepare extends Base {
       const tsLib = path.join(process.cwd(), 'tslib.js');
       const tsPath = require.resolve('saby-typescript/cli/install.js');
 
-      const copyWsTsLib = this._shell.execute(
-         `node ${tsPath} --tslib=${wsTslib} --tsconfig=skip`,
-         process.cwd(), {
-            force: true,
-            name: 'typescriptInstall'
-         }
-      );
-
-      const copyTsLib = this._shell.execute(
+      const copyTsFile = this._shell.execute(
          `node ${tsPath} --tslib=${tsLib} --tsconfig=skip`,
          process.cwd(), {
             force: true,
@@ -92,7 +84,15 @@ class Prepare extends Base {
          }
       );
 
-      return Promise.all([copyWsTsLib, copyTsLib]);
+      const copyWsTsLib = this._shell.execute(
+         `node ${tsPath} --tslib=${wsTslib} --tsconfig=skip --tslint=skip --globalTypings=skip`,
+         process.cwd(), {
+            force: true,
+            name: 'typescriptInstall'
+         }
+      );
+
+      return Promise.all([copyWsTsLib, copyTsFile]);
    }
 
 
