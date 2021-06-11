@@ -191,7 +191,9 @@
       "SiteEditorBase",
       "TextEditor",
       "MassEditing",
-      "MassEditing-default-theme"
+      "MassEditing-default-theme",
+      "ExpandableCollection",
+      "ExpandableCollection-default-theme"
     ],
     "id": "a7909725-2310-4cd7-857b-10bfd68f6758",
     "required": false,
@@ -5212,7 +5214,7 @@
     "forCDN": false
   },
   "MassEditing-default-theme": {
-    "s3mod": "sbis3.engine\\client\\MassEditing-default-theme\\Merge-default-theme.s3mod",
+    "s3mod": "sbis3.engine\\client\\MassEditing-default-theme\\MassEditing-default-theme.s3mod",
     "name": "MassEditing-default-theme",
     "path": "sbis3.engine\\client\\MassEditing-default-theme",
     "rep": "sbis3.engine",
@@ -5433,6 +5435,38 @@
       "Controls-default-theme"
     ],
     "id": "6ea15e7e-4021-41f5-8bf2-983a797a8897",
+    "required": true,
+    "forCDN": false
+  },
+  "ExpandableCollection": {
+    "s3mod": "sbis3.engine\\client\\ExpandableCollection\\ExpandableCollection.s3mod",
+    "name": "ExpandableCollection",
+    "path": "sbis3.engine\\client\\ExpandableCollection",
+    "rep": "sbis3.engine",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls",
+      "Types",
+      "Env",
+      "UI"
+    ],
+    "id": "59884750-b14c-43df-b956-aee5b31bbf97",
+    "required": true,
+    "forCDN": false
+  },
+  "ExpandableCollection-default-theme": {
+    "s3mod": "sbis3.engine\\client\\ExpandableCollection-default-theme\\ExpandableCollection-default-theme.s3mod",
+    "name": "ExpandableCollection-default-theme",
+    "path": "sbis3.engine\\client\\ExpandableCollection-default-theme",
+    "rep": "sbis3.engine",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "Controls-default-theme",
+      "ExpandableCollection"
+    ],
+    "id": "3630e495-2a15-4638-8126-031a2dd452df",
     "required": true,
     "forCDN": false
   }
