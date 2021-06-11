@@ -70,7 +70,7 @@ class Shell {
       const result = [];
       this._childProcessMap.push(childProccess);
 
-      if (params.stdio === 'pipe') {
+      if (childProccess.stdout) {
          childProccess.stdout.on('data', (data) => {
             const dataString = data.toString();
             if (!params.silent) {
