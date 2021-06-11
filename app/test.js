@@ -379,11 +379,19 @@ class Test extends Base {
       const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
+      const uiModuleNames = [];
+      this._modulesMap._modulesMap.forEach((item) => {
+         if (this._modulesMap._testRep.indexOf(item.rep) > -1) {
+            uiModuleNames.push(item.name);
+         }
+      });
+
+
       const buildDirectory = this._options.resources + path.sep;
-      const sourceModulePaths = this._modulesMap._modulesList.map(
+      const sourceModulePaths = uiModuleNames.map(
          (name) => this._modulesMap._modulesMap.get(name).path + path.sep
       );
-      const buildModulePaths = this._modulesMap._modulesList.map(
+      const buildModulePaths = uiModuleNames.map(
          (name) => path.join(buildDirectory, name) + path.sep
       );
       const sourceModules = JSON.stringify(sourceModulePaths, null, ' ').slice(1, -1);
