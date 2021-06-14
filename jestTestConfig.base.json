@@ -1,0 +1,43 @@
+{
+  "displayName": null,
+  "rootDir": null,
+  "roots": null,
+  "moduleDirectories": null,
+  "cacheDirectory": null,
+  "testMatch": [
+    "**/*.test.js"
+  ],
+
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**"
+  ],
+  "coverageDirectory": null,
+  "coverageReporters": [
+    "json", "html"
+  ],
+
+  "errorOnDeprecated": false,
+  "slowTestThreshold": 5,
+
+  "automock": false,
+  "clearMocks": false,
+  "resetMocks": false,
+  "resetModules": false,
+  "restoreMocks": false,
+
+  "maxConcurrency": 5,
+  "maxWorkers": "50%",
+  "testFailureExitCode": 1,
+  "testTimeout": 50000,
+
+  "testEnvironmentOptions": {
+    "pretendToBeVisual": true,
+    "contentType": "text/html",
+    "includeNodeLocations": true,
+    "storageQuota": 10000000,
+    "runScripts": "dangerously",
+    "resources": "usable"
+  }
+}
