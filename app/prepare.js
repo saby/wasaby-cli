@@ -73,26 +73,26 @@ class Prepare extends Base {
    async tsInstall() {
       const wsCore = this._modulesMap.get('WS.Core');
       const wsTslib = path.join(wsCore.path, 'ext', 'tslib.js');
-      const tsLib = path.join(process.cwd(), 'tslib.js');
+      const wsGlobalTyping = path.join(wsCore.path, 'global.d.ts');
       const tsPath = require.resolve('saby-typescript/cli/install.js');
 
+      const copyTsFile = this._shell.execute(
+         `node ${tsPath} --tsconfig=skip`,
+         process.cwd(), {
+            force: true,
+            name: 'typescriptInstall'
+         }
+      );
+
       const copyWsTsLib = this._shell.execute(
-         `node ${tsPath} --tslib=${wsTslib} --tsconfig=skip`,
+         `node ${tsPath} --tslib=${wsTslib} --tsconfig=skip --tslint=skip --globalTypings=${wsGlobalTyping}`,
          process.cwd(), {
             force: true,
             name: 'typescriptInstall'
          }
       );
 
-      const copyTsLib = this._shell.execute(
-         `node ${tsPath} --tslib=${tsLib} --tsconfig=skip`,
-         process.cwd(), {
-            force: true,
-            name: 'typescriptInstall'
-         }
-      );
-
-      return Promise.all([copyWsTsLib, copyTsLib]);
+      return Promise.all([copyWsTsLib, copyTsFile]);
    }
 
 

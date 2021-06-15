@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 const MAP_FILE = path.normalize(path.join(__dirname, '..', '..', 'resources', 'modulesMap.json'));
 const CDN_REP_NAME = 'wasaby_cdn';
 const WSCoreDepends = ['Types', 'Env', 'View', 'Vdom', 'UI', 'Browser'];
+const ownDependencies = ['Router', 'HotReload', 'DemoStand'];
 /**
  * Карта модулей s3mod, из всех репозиториев
  * @class ModulesMap
@@ -91,10 +92,12 @@ class ModulesMap {
    getChildModules(modules, traverse) {
       const defTraverse = traverse || [];
       let result = [];
+
       modules.forEach((name) => {
          if (this._modulesMap.has(name) && !defTraverse.includes(name)) {
             const cfg = this._modulesMap.get(name);
             const depends = cfg.depends.concat(this.getChildModules(cfg.depends, defTraverse.concat([name])));
+
             result.push(name);
             depends.forEach((item) => {
                if (!result.includes(item)) {
@@ -103,6 +106,7 @@ class ModulesMap {
             });
          }
       });
+
       return result;
    }
 
@@ -141,8 +145,26 @@ class ModulesMap {
          list = this.getTestModulesByRep('all');
       }
 
+      list = this.injectOwnDependencies(list);
+
       this._modulesList = list;
       return this._modulesList;
+   }
+
+   injectOwnDependencies(modules) {
+      const result = new Set(modules);
+
+      for (const dep of ownDependencies) {
+         if (result.has(dep)) {
+            continue;
+         }
+
+         for (const moduleName of this.getChildModules([dep])) {
+            result.add(moduleName)
+         }
+      }
+
+      return Array.from(result);
    }
 
    filterUnitTestModules(modules) {
