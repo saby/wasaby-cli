@@ -310,6 +310,11 @@ class Test extends Base {
       cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
       cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
 
+      const pathToTransformer = path.join(__dirname, '../jestTestTransformer.js');
+      cfg.transform = {
+         "\\.test\\.js$": pathToTransformer
+      };
+
       if (this._options.only) {
          logger.log(`[JEST CONFIG]`);
          logger.log(JSON.stringify(cfg, null, ' '));
