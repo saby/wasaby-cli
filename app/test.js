@@ -520,6 +520,7 @@ class Test extends Base {
          const args = [
             unitsPath,
             '--jest',
+            '--silent',
             `--config=${pathToConfig}`,
             `--env=${jestEnv}`,
             ...otherArguments
