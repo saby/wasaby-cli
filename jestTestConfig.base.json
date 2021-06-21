@@ -1,0 +1,54 @@
+{
+  "displayName": null,
+  "rootDir": null,
+  "roots": null,
+  "moduleDirectories": [
+    "node_modules"
+  ],
+  "cacheDirectory": null,
+  "testMatch": [
+    "**/*.test.js"
+  ],
+
+  "collectCoverage": false,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}"
+  ],
+  "coverageDirectory": null,
+  "coverageReporters": [
+    ["json", { "file": "coverage.json" }],
+    ["html", { "subdir": "coverage" }]
+  ],
+
+  "setupFiles": [],
+  "setupFilesAfterEnv": [],
+  "globals": {},
+  "transform": {},
+
+  "snapshotResolver": null,
+
+  "testEnvironmentOptions": {
+    "url": null,
+    "referrer": null,
+    "pretendToBeVisual": true,
+    "contentType": "text/html",
+    "includeNodeLocations": true,
+    "storageQuota": 10000000,
+    "runScripts": "dangerously",
+    "resources": "usable"
+  },
+
+  "errorOnDeprecated": false,
+  "slowTestThreshold": 5,
+
+  "automock": false,
+  "clearMocks": false,
+  "resetMocks": false,
+  "resetModules": false,
+  "restoreMocks": false,
+
+  "maxConcurrency": 5,
+  "maxWorkers": "50%",
+  "testFailureExitCode": 1,
+  "testTimeout": 50000
+}

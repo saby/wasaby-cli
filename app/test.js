@@ -19,6 +19,18 @@ const MAX_TEST_RESTART = 5;
 
 const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
+/**
+ * Постепенно раскатаем Jest по репозиториям, чтобы не ломать всё и сразу.
+ * Сюда запишем имена тех репозиториев (для локального запуска)
+ * и входящих в них тестовых UI-модулей (для запуска в Jenkins),
+ * чтобы понимать, что уже можно запускать под Jest, а что пока оставить под Mocha.
+ */
+const JEST_REPO_NAMES = [
+   'saby-ui', 'UITest', 'ReactUnitTest'
+];
+const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
+const JEST_FRAMEWORK_ENABLED = true;
+
 const _private = {
 
    /**
@@ -65,17 +77,32 @@ const _private = {
    }),
 
    /**
-    * Возвращает путь до конфига юнит тестов
+    * Возвращает путь до Mocha конфига юнит тестов
     * @param {String} repName Название репозитрия
     * @param {Boolean} isBrowser - Юниты в браузере
     * @returns {string}
     * @private
     */
    getPathToTestConfig: (repName, isBrowser) => {
-      const browser = isBrowser ? '_browser' : '';
+      const browser = isBrowser ? BROWSER_SUFFIX : '';
       return fsUtil.relative(
          process.cwd(),
          path.normalize(path.join(__dirname, '..', `testConfig_${repName}${browser}.json`))
+      );
+   },
+
+   /**
+    * Возвращает путь до Jest конфига юнит тестов
+    * @param repName {String} Название репозитория
+    * @param isBrowser {Boolean} Юниты в браузере
+    * @returns {string}
+    * @private
+    */
+   getPathToJestTestConfig: (repName, isBrowser) => {
+      const browser = isBrowser ? BROWSER_SUFFIX : '';
+      return fsUtil.relative(
+          process.cwd(),
+          path.normalize(path.join(__dirname, '..', `jestTestConfig_${repName}${browser}.json`))
       );
    }
 };
@@ -172,7 +199,7 @@ class Test extends Base {
    }
 
    /**
-    * Возвращает конфиг юнит тестов на основе базового testConfig.base.json
+    * Возвращает Mocha конфиг юнит тестов на основе базового testConfig.base.json
     * @param {String|Array<String>} names - Название репозитория
     * @param {String} suffix - browser/node
     * @param {Array<String>} testModules - модули с юнит тестами
@@ -237,6 +264,66 @@ class Test extends Base {
    }
 
    /**
+    * Возвращает Jest конфиг юнит тестов на основе базового jestTestConfig.base.json
+    * @param {String|Array<String>} names - Название репозитория
+    * @param {String} suffix - browser/node
+    * @param {Array<String>} testModules - модули с юнит тестами
+    * @param {String} snapshotResolverPath - путь к резолверу снимков
+    * @param {Number} port - порт для раздачи статики
+    * @private
+    */
+   async _getJestTestConfig(names, suffix, testModules, snapshotResolverPath, port) {
+      const fullName = `${names}${suffix || ''}`;
+      const cfg = {...require('../jestTestConfig.base.json')};
+      // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
+      const applicationDir = this._options.resources;
+      // Директория ветки, либо корневая директория локального репозитория для кеша и артефактов
+      const workspace = this._options.workspace || '.';
+      const coverageDirectory = path.join(workspace, 'artifacts', fullName);
+      // Директория, в которой хранится кеш для фреймворка Jest
+      const cacheDir = path.join(workspace, 'jest-cache');
+      // Список директорий с тестами, находящимися в applicationDir
+      const currentTests = testModules instanceof Array ? testModules : [testModules];
+      const tests = currentTests.map(testDir => path.join(applicationDir, testDir));
+      const setupFilePath = path.join(
+         path.dirname(require.resolve('saby-units/cli.js')),
+         'lib/jest/setup.js'
+      );
+      const transformerPath = path.join(
+         path.dirname(require.resolve('saby-units/cli.js')),
+         'lib/jest/transformer.js'
+      );
+
+      cfg.displayName = fullName;
+      cfg.rootDir = applicationDir;
+      cfg.roots = tests;
+      cfg.moduleDirectories.push(applicationDir);
+      cfg.cacheDirectory = cacheDir;
+      cfg.collectCoverage = !!this._options.coverage;
+      cfg.collectCoverageFrom = [
+         '**/*.{js,jsx}'
+      ];
+      cfg.coverageDirectory = coverageDirectory;
+      if (this._options.only) {
+         cfg.coverageReporters.push('text');
+      }
+      cfg.setupFilesAfterEnv.push(setupFilePath);
+      cfg.globals['__SABY_APPLICATION_DIRECTORY__'] = applicationDir;
+      cfg.globals['__SABY_LOAD_CSS__'] = suffix === BROWSER_SUFFIX;
+      cfg.globals['__SABY_DEBUG_MODE__'] = true;
+      cfg.transform['\\.test.js$'] = transformerPath;
+      cfg.snapshotResolver = snapshotResolverPath;
+      cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
+      cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
+
+      if (this._options.only) {
+         logger.log(`[JEST CONFIG]`);
+         logger.log(JSON.stringify(cfg, null, ' '));
+      }
+      return cfg;
+   }
+
+   /**
     * Возвращает путь до конфига
     * @param {string} fullName - название модуля с тестами
     * @returns {string}
@@ -259,12 +346,19 @@ class Test extends Base {
       if (modulesCfg !== undefined) {
          if (this._diff.has(modulesCfg.rep)) {
             const diff = this._diff.get(modulesCfg.rep);
-
             return diff.some(filePath => filePath.includes(moduleName + path.sep));
          }
-
          return true;
       }
+   }
+
+   /**
+    * Проверяет, нужно ли запускать юнит тесты под Jest
+    * @param moduleName {String} Название модуля
+    * @private
+    */
+   _shouldRunJestFramework(moduleName) {
+      return JEST_FRAMEWORK_ENABLED && JEST_REPO_NAMES.indexOf(moduleName) > -1;
    }
 
    /**
@@ -278,6 +372,67 @@ class Test extends Base {
          params.name,
          params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
          params.testModules
+      );
+      await fs.outputFile(
+         params.path,
+         JSON.stringify(cfg, null, 4)
+      );
+   }
+
+   /**
+    * Создать JS-скрипт для разрешения путей к снимкам,
+    * содержащий паравило для отображения build <-> source файлов.
+    * @param resolverPath {String} Путь для сохранения файла.
+    * @private
+    */
+   async _makeJestSnapshotResolver(resolverPath) {
+      const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
+      const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
+
+      const uiModuleNames = [];
+      this._modulesMap._modulesMap.forEach((item) => {
+         if (this._modulesMap._testRep.indexOf(item.rep) > -1) {
+            uiModuleNames.push(item.name);
+         }
+      });
+
+      const buildDirectory = this._options.resources + path.sep;
+      const sourceModulePaths = uiModuleNames.map(
+         (name) => this._modulesMap._modulesMap.get(name).path + path.sep
+      );
+      const buildModulePaths = uiModuleNames.map(
+         (name) => path.join(buildDirectory, name) + path.sep
+      );
+      const sourceModules = JSON.stringify(sourceModulePaths, null, ' ').slice(1, -1);
+      const buildModules = JSON.stringify(buildModulePaths, null, ' ').slice(1, -1);
+
+      const testUIModuleName = buildModulePaths[0];
+      const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'Component/index.js');
+
+      const resolverSource = baseResolverSource
+         .replace('/*#SOURCE_MODULES#*/', sourceModules)
+         .replace('/*#BUILD_MODULES#*/', buildModules)
+         .replace('/*#TEST_PATH_FOR_CONSISTENCY_CHECK#*/', testPathForConsistencyCheck);
+
+      await fs.outputFile(
+         resolverPath,
+         resolverSource
+      );
+   }
+
+   /**
+    * Создает файл с Jest конфигом для запуска юнит тестов
+    * @param params - параметры для запуска юнит тестов
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _makeJestTestConfig(params) {
+      const cfg = await this._getJestTestConfig(
+         params.name,
+         params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
+         params.testModules,
+         params.snapshotResolverPath,
+         params.port
       );
       await fs.outputFile(
          params.path,
@@ -333,6 +488,89 @@ class Test extends Base {
    }
 
    /**
+    * Запускает юниты на Jest
+    * @param name{String} Название модуля
+    * @param testModules {Array<String>} Модули с тестами
+    * @param isBrowser {Boolean} Флаг запуска тестов в окружении jsdom
+    * @returns {Promise<void>}
+    * @private
+    */
+   async _startJestTest(name, testModules, isBrowser) {
+      const suffix = isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
+      const fullName = `${name}${suffix}`;
+      try {
+         const snapshotResolverPath = path.join(__dirname, '..', SNAPSHOT_RESOLVER_FILENAME);
+         await this._makeJestSnapshotResolver(snapshotResolverPath);
+
+         const port = await getPort();
+         const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
+         await this._makeJestTestConfig({
+            name: name,
+            testModules: testModules || name,
+            path: pathToConfig,
+            isBrowser: isBrowser,
+            snapshotResolverPath: snapshotResolverPath,
+            port: port
+         });
+
+         const unitsPath = require.resolve('saby-units/cli.js');
+         const outputFile = this.getReportPath(fullName);
+         const otherArguments = this._getUnknownArgs(['tasks', 'copy', 'react']);
+         const jestEnv = isBrowser ? 'jsdom' : 'node';
+         const args = [
+            unitsPath,
+            '--jest',
+            `--config=${pathToConfig}`,
+            `--env=${jestEnv}`,
+            ...otherArguments
+         ];
+         if (this._report === 'xml') {
+            // jest-junit xml file configuration
+            args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
+            args.push(`--ENV_VAR-JEST_SUITE_NAME=Jest Unit Tests`);
+            args.push(`--ENV_VAR-JEST_JUNIT_SUITE_NAME=${fullName}.{title}`);
+            args.push(`--ENV_VAR-JEST_JUNIT_CLASSNAME={classname}`);
+            args.push(`--ENV_VAR-JEST_JUNIT_TITLE={title}`);
+         }
+         // Чтобы отчет сохранялся средствами jest-junit
+         if (!this._options.only) {
+            args.push('--ci');
+         }
+
+         if (isBrowser) {
+            args.push(`--port=${port}`);
+            args.push(`--root=${this._options.resources}`);
+         }
+
+         await this._shell.spawn(
+            'node',
+            args,
+            {
+               processName: fullName,
+               timeout: TEST_TIMEOUT,
+               silent: this._report === 'console',
+               stdio: this._report === 'console' ? 'inherit' : 'pipe'
+            }
+         );
+
+         // todo разобраться почему ошибки без стека, пока такие не учитываем
+         this._testErrors[fullName] = this._shell.getErrorsByName(fullName);
+         if (this._testErrors[fullName]) {
+            this._testErrors[fullName] = this._testErrors[fullName].filter(msg => msg.includes('Stack:'));
+         }
+      } catch (e) {
+         this._testErrors[fullName] = e;
+      } finally {
+         if (this._shouldUpdateAllowedErrors) {
+            this._testErrors[fullName].map((msg) => {
+               this._allowedErrorsSet.add(this._getErrorText(msg));
+               return undefined;
+            });
+         }
+      }
+   }
+
+   /**
     * Запускает юниты под нодой
     * @param {String} name - Название модуля
     * @param {Array<String>} testModules - Модули с тестами
@@ -341,7 +579,11 @@ class Test extends Base {
     */
    async _startNodeTest(name, testModules) {
       if (!this._testOnlyBrowser) {
-         const processName = name + NODE_SUFFIX;
+         const moduleName = `${name}`;
+         const processName = moduleName + NODE_SUFFIX;
+         if (this._shouldRunJestFramework(moduleName)) {
+            return this._startJestTest(name, testModules, false);
+         }
          try {
             const pathToConfig = _private.getPathToTestConfig(name, false);
 
@@ -352,12 +594,19 @@ class Test extends Base {
                isBrowser: false
             });
 
+            const unitsPath = require.resolve('saby-units/cli.js');
             const coverage = this._options.coverage ? '--coverage' : '';
             const report = this._report === 'xml' ? '--report' : '';
-            const unitsPath = require.resolve('saby-units/cli.js');
-            let args = [unitsPath, '--isolated', coverage, report, `--configUnits=${pathToConfig}`].concat(
-               this._getUnknownArgs()
-            );
+            const otherArguments = this._getUnknownArgs(['tasks']);
+            let args = [
+               unitsPath,
+               '--isolated',
+               `--config=${pathToConfig}`,
+               coverage,
+               report,
+               ...otherArguments
+            ];
+
             await this._shell.spawn(
                'node',
                args,
@@ -396,14 +645,14 @@ class Test extends Base {
     */
    async _startBrowserTest(name, testModules) {
       const moduleCfg = this._modulesMap.get(name);
-      if (
-         !this._options.node &&
-            (
-               (moduleCfg && moduleCfg.testInBrowser) ||
-               !moduleCfg ||
-               this._testOnlyBrowser
-            )
-      ) {
+      const canRunBrowserTests =  !this._options.node && (
+         (moduleCfg && moduleCfg.testInBrowser) || !moduleCfg || this._testOnlyBrowser
+      );
+      if (canRunBrowserTests) {
+         const moduleName = `${name}`;
+         if (this._shouldRunJestFramework(moduleName)) {
+            return this._startJestTest(name, testModules, true);
+         }
          const configPath = _private.getPathToTestConfig(name, true);
          const coverage = this._options.coverage ? ' --coverage' : '';
          logger.log('Запуск тестов в браузере', name);
@@ -581,10 +830,15 @@ class Test extends Base {
       this._allowedErrorsSet = new Set(errors || []);
    }
 
-   _getUnknownArgs() {
+   _getUnknownArgs(ignoreArgs = []) {
+      // FIXME: ignoreArgs нужен, чтобы Jest не ругался на неизвестные параметры.
+      //  Выяснить, почему --tasks, --react, --copy остались необработанными и убрать фильтрацию.
       let args = [];
       Object.keys(this._options.argvOptions).forEach((name) => {
          if (!this._options.hasOwnProperty(name)) {
+            if (ignoreArgs.indexOf(name) > -1) {
+               return;
+            }
             let value = this._options.argvOptions[name];
             if (typeof value === 'boolean') {
                args.push(`--${name}`);
