@@ -525,6 +525,7 @@ class Test extends Base {
             `--env=${jestEnv}`,
             ...otherArguments
          ];
+         // Чтобы отчет сохранялся средствами jest-junit
          if (this._report === 'xml') {
             // jest-junit xml file configuration
             args.push(`--ENV_VAR-JEST_JUNIT_OUTPUT_FILE=${outputFile}`);
@@ -533,7 +534,7 @@ class Test extends Base {
             args.push(`--ENV_VAR-JEST_JUNIT_CLASSNAME={classname}`);
             args.push(`--ENV_VAR-JEST_JUNIT_TITLE={title}`);
          }
-         // Чтобы отчет сохранялся средствами jest-junit
+         // Необходимо, чтобы jest не создавал снимки в случае их отсутствия
          if (!this._options.only) {
             args.push('--ci');
          }
