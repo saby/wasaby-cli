@@ -20,6 +20,11 @@
     ["html", { "subdir": "coverage" }]
   ],
 
+  "setupFiles": [],
+  "setupFilesAfterEnv": [],
+  "globals": {},
+  "transform": {},
+
   "snapshotResolver": null,
 
   "testEnvironmentOptions": {
