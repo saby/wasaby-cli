@@ -508,6 +508,8 @@ class Test extends Base {
             port: port
          });
 
+         // TODO: Нужен хороший флаг
+         const isCI = !this._options.only;
          const unitsPath = require.resolve('saby-units/cli.js');
          const outputFile = this.getReportPath(fullName);
          const otherArguments = this._getUnknownArgs(['tasks', 'copy', 'react']);
@@ -515,7 +517,8 @@ class Test extends Base {
          const args = [
             unitsPath,
             '--jest',
-            '--silent',
+            // Не выводить сообщения только локально. В Jenkins сообщения забирает jest-junit и кладет в xml.
+            `--silent=${!isCI}`,
             `--config=${pathToConfig}`,
             `--env=${jestEnv}`,
             ...otherArguments
@@ -528,9 +531,10 @@ class Test extends Base {
             args.push(`--ENV_VAR-JEST_JUNIT_SUITE_NAME=${fullName}.{title}`);
             args.push(`--ENV_VAR-JEST_JUNIT_CLASSNAME=${fullName}.{classname}`);
             args.push(`--ENV_VAR-JEST_JUNIT_TITLE={title}`);
+            args.push(`--ENV_VAR-JEST_JUNIT_INCLUDE_CONSOLE_OUTPUT=true`);
          }
          // Необходимо, чтобы jest не создавал снимки в случае их отсутствия
-         if (!this._options.only) {
+         if (isCI) {
             args.push('--ci');
          }
 
