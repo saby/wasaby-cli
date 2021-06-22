@@ -289,10 +289,6 @@ class Test extends Base {
          path.dirname(require.resolve('saby-units/cli.js')),
          'lib/jest/setup.js'
       );
-      const transformerPath = path.join(
-         path.dirname(require.resolve('saby-units/cli.js')),
-         'lib/jest/transformer.js'
-      );
 
       cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
@@ -311,7 +307,6 @@ class Test extends Base {
       cfg.globals['__SABY_APPLICATION_DIRECTORY__'] = applicationDir;
       cfg.globals['__SABY_LOAD_CSS__'] = suffix === BROWSER_SUFFIX;
       cfg.globals['__SABY_DEBUG_MODE__'] = true;
-      cfg.transform['\\.test.js$'] = transformerPath;
       cfg.snapshotResolver = snapshotResolverPath;
       cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
       cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
