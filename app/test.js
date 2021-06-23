@@ -263,10 +263,10 @@ class Test extends Base {
       return cfg;
    }
 
-   _getUIModulesPaths() {
+   _getUIModulesPaths(unitsOnly) {
       let uiModules = this._modulesMap.getRequiredModules();
 
-      if (!this._options.coverage) {
+      if (unitsOnly) {
          uiModules = uiModules.filter((uiModuleName) => this._modulesMap.get(uiModuleName).unitTest);
       }
 
@@ -305,7 +305,7 @@ class Test extends Base {
          'lib/jest/setup.js'
       );
       // Список путей к UI-модулям, в которых происходит поиск тестов и анализ покрытия
-      const roots = this._getUIModulesPaths().buildPaths;
+      const roots = this._getUIModulesPaths(!this._options.coverage).buildPaths;
 
       cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
@@ -401,7 +401,7 @@ class Test extends Base {
       const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
-      const uiModulesPaths = this._getUIModulesPaths();
+      const uiModulesPaths = this._getUIModulesPaths(true);
       const sourceModules = JSON.stringify(uiModulesPaths.sourcePaths, null, ' ').slice(1, -1);
       const buildModules = JSON.stringify(uiModulesPaths.buildPaths, null, ' ').slice(1, -1);
 
