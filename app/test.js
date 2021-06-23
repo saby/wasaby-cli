@@ -29,7 +29,7 @@ const JEST_REPO_NAMES = [
    'saby-ui', 'UITest', 'ReactUnitTest'
 ];
 const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
-const JEST_FRAMEWORK_ENABLED = true;
+const JEST_FRAMEWORK_ENABLED = false;
 
 const _private = {
 
@@ -282,17 +282,27 @@ class Test extends Base {
       const coverageDirectory = path.join(workspace, 'artifacts', fullName);
       // Директория, в которой хранится кеш для фреймворка Jest
       const cacheDir = path.join(workspace, 'jest-cache');
-      // Список директорий с тестами, находящимися в applicationDir
-      const currentTests = testModules instanceof Array ? testModules : [testModules];
-      const tests = currentTests.map(testDir => path.join(applicationDir, testDir));
+      // Установочный файл, в котором выполняется инициализация окружения
       const setupFilePath = path.join(
          path.dirname(require.resolve('saby-units/cli.js')),
          'lib/jest/setup.js'
       );
+      // Список путей к UI-модулям, в которых происходит поиск тестов.
+      // Также эти директории участвуют в покрытии
+      const uiModuleNames = [];
+      this._modulesMap._modulesMap.forEach((item) => {
+         if (this._modulesMap._testRep.indexOf(item.rep) > -1) {
+            uiModuleNames.push(item.name);
+         }
+      });
+      const buildDirectory = this._options.resources + path.sep;
+      const buildModulePaths = uiModuleNames.map(
+         (name) => path.join(buildDirectory, name)
+      );
 
       cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
-      cfg.roots = tests;
+      cfg.roots = buildModulePaths;
       cfg.moduleDirectories.push(applicationDir);
       cfg.cacheDirectory = cacheDir;
       cfg.collectCoverage = !!this._options.coverage;
