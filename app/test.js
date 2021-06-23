@@ -263,6 +263,23 @@ class Test extends Base {
       return cfg;
    }
 
+   _getUIModulesPaths() {
+      let uiModules = this._modulesMap.getRequiredModules();
+
+      if (!this._options.coverage) {
+         uiModules = uiModules.filter((uiModuleName) => this._modulesMap.get(uiModuleName).unitTest);
+      }
+
+      const buildPaths = uiModules.map((moduleName) => path.join(this._options.resources, moduleName));
+      const sourcePaths = uiModules.map((moduleName) => this._modulesMap.get(moduleName).path);
+
+      return {
+         uiModules,
+         buildPaths,
+         sourcePaths
+      };
+   }
+
    /**
     * Возвращает Jest конфиг юнит тестов на основе базового jestTestConfig.base.json
     * @param {String|Array<String>} names - Название репозитория
@@ -287,22 +304,12 @@ class Test extends Base {
          path.dirname(require.resolve('saby-units/cli.js')),
          'lib/jest/setup.js'
       );
-      // Список путей к UI-модулям, в которых происходит поиск тестов.
-      // Также эти директории участвуют в покрытии
-      const uiModuleNames = [];
-      this._modulesMap._modulesMap.forEach((item) => {
-         if (this._modulesMap._testRep.indexOf(item.rep) > -1) {
-            uiModuleNames.push(item.name);
-         }
-      });
-      const buildDirectory = this._options.resources + path.sep;
-      const buildModulePaths = uiModuleNames.map(
-         (name) => path.join(buildDirectory, name)
-      );
+      // Список путей к UI-модулям, в которых происходит поиск тестов и анализ покрытия
+      const roots = this._getUIModulesPaths().buildPaths;
 
       cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
-      cfg.roots = buildModulePaths;
+      cfg.roots = roots;
       cfg.moduleDirectories.push(applicationDir);
       cfg.cacheDirectory = cacheDir;
       cfg.collectCoverage = !!this._options.coverage;
@@ -394,24 +401,12 @@ class Test extends Base {
       const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
-      const uiModuleNames = [];
-      this._modulesMap._modulesMap.forEach((item) => {
-         if (this._modulesMap._testRep.indexOf(item.rep) > -1) {
-            uiModuleNames.push(item.name);
-         }
-      });
+      const uiModulesPaths = this._getUIModulesPaths();
+      const sourceModules = JSON.stringify(uiModulesPaths.sourcePaths, null, ' ').slice(1, -1);
+      const buildModules = JSON.stringify(uiModulesPaths.buildPaths, null, ' ').slice(1, -1);
 
-      const buildDirectory = this._options.resources + path.sep;
-      const sourceModulePaths = uiModuleNames.map(
-         (name) => this._modulesMap._modulesMap.get(name).path + path.sep
-      );
-      const buildModulePaths = uiModuleNames.map(
-         (name) => path.join(buildDirectory, name) + path.sep
-      );
-      const sourceModules = JSON.stringify(sourceModulePaths, null, ' ').slice(1, -1);
-      const buildModules = JSON.stringify(buildModulePaths, null, ' ').slice(1, -1);
-
-      const testUIModuleName = buildModulePaths[0];
+      const buildDirectory = this._options.resources;
+      const testUIModuleName = uiModulesPaths.uiModules[0];
       const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'Component/index.js');
 
       const resolverSource = baseResolverSource
