@@ -29,7 +29,7 @@ const JEST_REPO_NAMES = [
    'saby-ui', 'UITest', 'ReactUnitTest'
 ];
 const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
-const JEST_FRAMEWORK_ENABLED = false;
+const JEST_FRAMEWORK_ENABLED = true;
 
 const _private = {
 
