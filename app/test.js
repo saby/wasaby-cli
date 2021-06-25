@@ -21,15 +21,13 @@ const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 
 /**
  * Постепенно раскатаем Jest по репозиториям, чтобы не ломать всё и сразу.
- * Сюда запишем имена тех репозиториев (для локального запуска)
- * и входящих в них тестовых UI-модулей (для запуска в Jenkins),
- * чтобы понимать, что уже можно запускать под Jest, а что пока оставить под Mocha.
+ * Сюда запишем имена тех репозиториев, для которых необходимо запускать Jest для unit-тестирования.
  */
-const JEST_REPO_NAMES = [
-   'saby-ui', 'UITest', 'ReactUnitTest'
+const JEST_ALLOWED_REPOS = [
+   'saby-ui'
 ];
 const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
-const JEST_FRAMEWORK_ENABLED = false;
+const JEST_FRAMEWORK_ENABLED = true;
 
 const _private = {
 
@@ -263,13 +261,14 @@ class Test extends Base {
       return cfg;
    }
 
-   _getUIModulesPaths(unitsOnly) {
-      let uiModules = this._modulesMap.getRequiredModules();
-
-      if (unitsOnly) {
-         uiModules = uiModules.filter((uiModuleName) => this._modulesMap.get(uiModuleName).unitTest);
-      }
-
+   /**
+    * Получить описание тестируемых модулей (имя, пути к build/source).
+    * @param config {object} Параметры конфигурации Jest.
+    * @returns {{uiModules: string[], buildPaths: string[], sourcePaths: string[]}}
+    * @private
+    */
+   _getUIModulesPaths(config) {
+      const uiModules = Array.isArray(config.testModules) ? config.testModules : [config.testModules];
       const buildPaths = uiModules.map((moduleName) => path.join(this._options.resources, moduleName));
       const sourcePaths = uiModules.map((moduleName) => this._modulesMap.get(moduleName).path);
 
@@ -282,15 +281,12 @@ class Test extends Base {
 
    /**
     * Возвращает Jest конфиг юнит тестов на основе базового jestTestConfig.base.json
-    * @param {String|Array<String>} names - Название репозитория
-    * @param {String} suffix - browser/node
-    * @param {Array<String>} testModules - модули с юнит тестами
-    * @param {String} snapshotResolverPath - путь к резолверу снимков
-    * @param {Number} port - порт для раздачи статики
+    * @param config - параметры для запуска юнит тестов
     * @private
     */
-   async _getJestTestConfig(names, suffix, testModules, snapshotResolverPath, port) {
-      const fullName = `${names}${suffix || ''}`;
+   async _getJestTestConfig(config) {
+      const suffix = config.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
+      const fullName = `${config.name}${suffix || ''}`;
       const cfg = {...require('../jestTestConfig.base.json')};
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
       const applicationDir = this._options.resources;
@@ -305,7 +301,7 @@ class Test extends Base {
          'lib/jest/setup.js'
       );
       // Список путей к UI-модулям, в которых происходит поиск тестов и анализ покрытия
-      const roots = this._getUIModulesPaths(!this._options.coverage).buildPaths;
+      const roots = this._getUIModulesPaths(config).buildPaths;
 
       cfg.displayName = fullName;
       cfg.rootDir = applicationDir;
@@ -324,11 +320,11 @@ class Test extends Base {
       cfg.globals['__SABY_APPLICATION_DIRECTORY__'] = applicationDir;
       cfg.globals['__SABY_LOAD_CSS__'] = suffix === BROWSER_SUFFIX;
       cfg.globals['__SABY_DEBUG_MODE__'] = true;
-      cfg.snapshotResolver = snapshotResolverPath;
-      cfg.testEnvironmentOptions.url = `http://localhost:${port}`;
-      cfg.testEnvironmentOptions.referrer = `http://localhost:${port}`;
+      cfg.snapshotResolver = config.snapshotResolverPath;
+      cfg.testEnvironmentOptions.url = `http://localhost:${config.port}`;
+      cfg.testEnvironmentOptions.referrer = `http://localhost:${config.port}`;
 
-      if (this._options.only) {
+      if (!this._options.only) {
          logger.log(`[JEST CONFIG]`);
          logger.log(JSON.stringify(cfg, null, ' '));
       }
@@ -370,7 +366,14 @@ class Test extends Base {
     * @private
     */
    _shouldRunJestFramework(moduleName) {
-      return JEST_FRAMEWORK_ENABLED && JEST_REPO_NAMES.indexOf(moduleName) > -1;
+      if (!JEST_FRAMEWORK_ENABLED) {
+         return false;
+      }
+
+      // Если this._options.only, то moduleName - имя тестируемого репозитория, иначе это имя тестируемого модуля.
+      const repName = this._options.only ? moduleName : this._modulesMap.get(moduleName).rep;
+
+      return JEST_ALLOWED_REPOS.includes(repName);
    }
 
    /**
@@ -394,14 +397,14 @@ class Test extends Base {
    /**
     * Создать JS-скрипт для разрешения путей к снимкам,
     * содержащий паравило для отображения build <-> source файлов.
-    * @param resolverPath {String} Путь для сохранения файла.
+    * @param config {object} Параметры конфигурации Jest.
     * @private
     */
-   async _makeJestSnapshotResolver(resolverPath) {
+   async _makeJestSnapshotResolver(config) {
       const baseResolverPath = path.join(__dirname, '../snapshot-resolver.base.js');
       const baseResolverSource = await fs.readFile(baseResolverPath, 'utf-8');
 
-      const uiModulesPaths = this._getUIModulesPaths(true);
+      const uiModulesPaths = this._getUIModulesPaths(config);
       const sourceModules = JSON.stringify(uiModulesPaths.sourcePaths, null, ' ').slice(1, -1);
       const buildModules = JSON.stringify(uiModulesPaths.buildPaths, null, ' ').slice(1, -1);
 
@@ -415,27 +418,21 @@ class Test extends Base {
          .replace('/*#TEST_PATH_FOR_CONSISTENCY_CHECK#*/', testPathForConsistencyCheck);
 
       await fs.outputFile(
-         resolverPath,
+         config.snapshotResolverPath,
          resolverSource
       );
    }
 
    /**
     * Создает файл с Jest конфигом для запуска юнит тестов
-    * @param params - параметры для запуска юнит тестов
+    * @param config - параметры для запуска юнит тестов
     * @returns {Promise<void>}
     * @private
     */
-   async _makeJestTestConfig(params) {
-      const cfg = await this._getJestTestConfig(
-         params.name,
-         params.isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX,
-         params.testModules,
-         params.snapshotResolverPath,
-         params.port
-      );
+   async _makeJestTestConfig(config) {
+      const cfg = await this._getJestTestConfig(config);
       await fs.outputFile(
-         params.path,
+         config.path,
          JSON.stringify(cfg, null, 4)
       );
    }
@@ -500,18 +497,16 @@ class Test extends Base {
       const fullName = `${name}${suffix}`;
       try {
          const snapshotResolverPath = path.join(__dirname, '..', SNAPSHOT_RESOLVER_FILENAME);
-         await this._makeJestSnapshotResolver(snapshotResolverPath);
-
          const port = await getPort();
          const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
-         await this._makeJestTestConfig({
+         const config = {
             name: name,
             testModules: testModules || name,
             path: pathToConfig,
             isBrowser: isBrowser,
             snapshotResolverPath: snapshotResolverPath,
             port: port
-         });
+         };
 
          // TODO: Нужен хороший флаг
          const isCI = !this._options.only;
@@ -547,6 +542,9 @@ class Test extends Base {
             args.push(`--port=${port}`);
             args.push(`--root=${this._options.resources}`);
          }
+
+         await this._makeJestSnapshotResolver(config);
+         await this._makeJestTestConfig(config);
 
          await this._shell.spawn(
             'node',
@@ -842,7 +840,7 @@ class Test extends Base {
       let args = [];
       Object.keys(this._options.argvOptions).forEach((name) => {
          if (!this._options.hasOwnProperty(name)) {
-            if (ignoreArgs.indexOf(name) > -1) {
+            if (ignoreArgs.includes(name)) {
                return;
             }
             let value = this._options.argvOptions[name];
