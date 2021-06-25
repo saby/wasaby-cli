@@ -366,25 +366,17 @@ class Test extends Base {
     * @private
     */
    _shouldRunJestFramework(moduleName) {
-      let isAllowedModule = false;
-
       if (!JEST_FRAMEWORK_ENABLED) {
-         return isAllowedModule;
+         return false;
       }
 
-      if (this._options.only) {
+      const repName = this._options.only
          // moduleName - имя тестируемого репозитория
-         return JEST_ALLOWED_REPOS.indexOf(moduleName) > -1;
-      }
+         ? moduleName
+         // moduleName - имя тестируемого модуля
+         : this._modulesMap.get(moduleName).rep;
 
-      // moduleName - имя тестируемого модуля
-      JEST_ALLOWED_REPOS.forEach((repoName) => {
-         const testModules = this._modulesMap.getTestModulesByRep(repoName);
-         if (testModules.indexOf(moduleName) > -1) {
-            isAllowedModule = true;
-         }
-      });
-      return isAllowedModule;
+      return JEST_ALLOWED_REPOS.includes(repName);
    }
 
    /**
@@ -851,7 +843,7 @@ class Test extends Base {
       let args = [];
       Object.keys(this._options.argvOptions).forEach((name) => {
          if (!this._options.hasOwnProperty(name)) {
-            if (ignoreArgs.indexOf(name) > -1) {
+            if (ignoreArgs.includes(name)) {
                return;
             }
             let value = this._options.argvOptions[name];
