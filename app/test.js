@@ -496,7 +496,7 @@ class Test extends Base {
       const suffix = isBrowser ? BROWSER_SUFFIX : NODE_SUFFIX;
       const fullName = `${name}${suffix}`;
       try {
-         const snapshotResolverPath = path.join(__dirname, '..', `${SNAPSHOT_RESOLVER_PREFIX}${repName}${suffix}.js`);
+         const snapshotResolverPath = path.join(__dirname, '..', `${SNAPSHOT_RESOLVER_PREFIX}${name}${suffix}.js`);
          const port = await getPort();
          const pathToConfig = _private.getPathToJestTestConfig(name, isBrowser);
          const config = {
