@@ -27,7 +27,7 @@ const JEST_ALLOWED_REPOS = [
    'saby-ui'
 ];
 const SNAPSHOT_RESOLVER_PREFIX = 'snapshot-resolver_';
-const JEST_FRAMEWORK_ENABLED = !true;
+const JEST_FRAMEWORK_ENABLED = true;
 
 const _private = {
 
