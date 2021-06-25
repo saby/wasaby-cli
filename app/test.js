@@ -370,11 +370,8 @@ class Test extends Base {
          return false;
       }
 
-      const repName = this._options.only
-         // moduleName - имя тестируемого репозитория
-         ? moduleName
-         // moduleName - имя тестируемого модуля
-         : this._modulesMap.get(moduleName).rep;
+      // Если this._options.only, то moduleName - имя тестируемого репозитория, иначе это имя тестируемого модуля.
+      const repName = this._options.only ? moduleName : this._modulesMap.get(moduleName).rep;
 
       return JEST_ALLOWED_REPOS.includes(repName);
    }
