@@ -28,6 +28,9 @@ const AVAILABLE_REPORT_FORMAT = ['json', 'html', 'text'];
 const JEST_REPO_NAMES = [
    'saby-ui', 'UITest', 'ReactUnitTest'
 ];
+const JEST_ALLOWED_REPOS = [
+   'saby-ui'
+];
 const SNAPSHOT_RESOLVER_FILENAME = 'snapshot-resolver.js';
 const JEST_FRAMEWORK_ENABLED = true;
 
@@ -370,7 +373,25 @@ class Test extends Base {
     * @private
     */
    _shouldRunJestFramework(moduleName) {
-      return JEST_FRAMEWORK_ENABLED && JEST_REPO_NAMES.indexOf(moduleName) > -1;
+      let isAllowedModule = false;
+
+      if (!JEST_FRAMEWORK_ENABLED) {
+         return isAllowedModule;
+      }
+
+      if (this._options.only) {
+         // moduleName - имя тестируемого репозитория
+         return JEST_ALLOWED_REPOS.indexOf(moduleName);
+      }
+
+      // moduleName - имя тестируемого модуля
+      JEST_ALLOWED_REPOS.forEach((repoName) => {
+         const testModules = this._modulesMap.getTestModulesByRep(repoName);
+         if (testModules.indexOf(moduleName) > -1) {
+            isAllowedModule = true;
+         }
+      });
+      return isAllowedModule;
    }
 
    /**
