@@ -1,14 +1,10 @@
 //tslint:disable:no-unused-expression
 //tslint:disable:one-variable-per-declaration
-
 const chai = require('chai');
 const sinon = require('sinon');
 const fs = require('fs-extra');
-const path = require('path');
 const Store = require('../app/store');
-const Git = require('../app/util/git');
 const shell = require('../app/util/shell');
-const net  = require('net');
 
 let store;
 let stubExecute;
@@ -16,46 +12,68 @@ let stubfsAppend;
 describe('Store', () => {
    beforeEach(() => {
       stubExecute = sinon.stub(shell.prototype, 'execute').callsFake(() => {});
+
+      const options = new Map([
+         ['rc', 'rc-12'],
+         ['store', ''],
+         ['repositories', {
+            test1: {},
+            test2: {}
+         }],
+         ['rep', ['name']]
+      ]);
       store = new Store({
-         rc: 'rc-12',
-         store: '',
-         argvOptions: {},
-         config: {
-            repositories: {
-               test1: {},
-               test2: {}
-            }
-         },
-         testRep:['name']
+         options
       });
+
       stubfsAppend = sinon.stub(fs, 'appendFileSync').callsFake(() => undefined);
    });
+
    afterEach(() => {
       stubExecute.restore();
       stubfsAppend.restore();
    });
+
    describe('initRep', () => {
-      let stubCheckout, stubClone, stubMkDir, stubRepConf;
+      let stubCheckout;
+      let stubClone;
+      let stubMkDir;
+      let originalRepos;
+
       beforeEach(() => {
+         originalRepos = store.options.get('repositories');
+
+         store.options.set('repositories', {
+            test: {}
+         });
+
          stubMkDir = sinon.stub(fs, 'mkdirs').callsFake(() => {
             return Promise.resolve();
          });
-         stubRepConf = sinon.stub(store, '_config').value( {
-            repositories: {test: {}}
-         });
       });
+
+      afterEach(() => {
+         store.options.set('repositories', originalRepos);
+
+         stubCheckout.restore();
+         stubClone.restore();
+         stubMkDir.restore();
+      });
+
       it('should checkout brunch', (done) => {
          stubCheckout = sinon.stub(store, 'checkout').callsFake((name, branch) => {
             chai.expect(name).to.equal('test');
-            chai.expect(branch).to.equal(store._rc);
+            chai.expect(branch).to.equal(store.options.get('rc'));
             done();
          });
          stubClone = sinon.stub(store, 'cloneRepToStore').callsFake((name) => {
             chai.expect(name).to.equal('test');
             return Promise.resolve('testPath');
          });
+
          store.initRep('test');
       });
+
       it('should checkout brunch version 19.999/test', (done) => {
          stubCheckout = sinon.stub(store, 'checkout').callsFake((name, branch, pathToRepos) => {
             chai.expect(branch).to.equal('19.999/test');
@@ -64,35 +82,40 @@ describe('Store', () => {
          stubClone = sinon.stub(store, 'cloneRepToStore').callsFake((name) => {
             return Promise.resolve();
          });
-         let stubArgv = sinon.stub(store, '_argvOptions').value({test: '19.999/test'});
-         store.initRep('test');
-         stubArgv.restore();
-      });
+         store.options.set('test', '19.999/test');
 
-      afterEach(() => {
-         stubCheckout.restore();
-         stubClone.restore();
-         stubMkDir.restore();
+         store.initRep('test');
+
+         store.options.delete('test');
       });
    });
 
    describe('.cloneRepToStore()', () => {
-      let stubRepos, stubfs;
+      let stubfs;
+      let originalRepos;
+
       beforeEach(() => {
-         stubRepos = sinon.stub(store, '_config').value({
-            repositories: {
-               test: {
-                  url: 'test@test.git'
-               }
+         originalRepos = store.options.get('repositories');
+
+         store.options.set('repositories', {
+            test: {
+               url: 'test@test.git'
             }
          });
+
          stubfs = sinon.stub(fs, 'existsSync').callsFake(() => false);
+      });
+
+      afterEach(() => {
+         store.options.set('repositories', originalRepos);
+         stubfs.restore();
       });
 
       it('cloneRepToStore', (done) => {
          stubExecute.callsFake((cmd) => {
             chai.expect(cmd).to.equal('git clone test@test.git test');
             done();
+
             return Promise.resolve();
          });
 
@@ -109,17 +132,17 @@ describe('Store', () => {
             done();
          });
       });
-
-      afterEach(() => {
-         stubRepos.restore();
-         stubfs.restore();
-      });
    });
 
    describe('.checkout()', () => {
-      let stubModule, stubReadJSON, stubExists;
+      let stubModule;
+      let stubReadJSON;
+      let stubExists;
+      let originalTestRep;
 
       beforeEach(() => {
+         originalTestRep = store.options.get('rep');
+
          stubReadJSON = sinon.stub(fs, 'readJSONSync').callsFake((name) => {
             if (name.includes('package.json')) {
                return  {
@@ -129,10 +152,12 @@ describe('Store', () => {
             }
             return stubReadJSON.wrappedMethod();
          });
+
          stubExists = sinon.stub(fs, 'existsSync').callsFake(name => name.includes('package.json'));
       });
 
       afterEach(() => {
+         store.options.set('rep', originalTestRep);
          stubReadJSON.restore();
          stubExists.restore();
       });
@@ -156,12 +181,15 @@ describe('Store', () => {
       });
 
       it('should merge branch with rc', (done) => {
-         let commandsArray = [];
+         const commandsArray = [];
+
          stubExecute.callsFake((cmd) => {
             commandsArray.push(cmd);
             return Promise.resolve();
          });
-         stubModule = sinon.stub(store, '_testRep').value('test');
+
+         store.options.set('rep', ['test']);
+
          store.checkout('test', '20.1000/branch').then(() => {
             chai.expect(`git merge remotes/origin/rc-20.1000`).to.equal(commandsArray[5]);
             done();
@@ -169,12 +197,15 @@ describe('Store', () => {
       });
 
       it('should merge branch with rc if rep is additional', (done) => {
-         let commandsArray = [];
+         const commandsArray = [];
+
          stubExecute.callsFake((cmd) => {
             commandsArray.push(cmd);
             return Promise.resolve();
          });
-         stubModule = sinon.stub(store, '_testRep').value('test');
+
+         store.options.set('rep', ['test']);
+
          store.checkout('testAdd', '20.1000/branch').then(() => {
             chai.expect(`git merge remotes/origin/rc-20.1000`).to.equal(commandsArray[5]);
             done();
@@ -187,7 +218,9 @@ describe('Store', () => {
                throw new Error();
             }
          });
-         stubModule = sinon.stub(store, '_testRep').value('test');
+
+         store.options.set('rep', ['test']);
+
          store.checkout('test', 'branch').catch(() => {
             done();
          });
@@ -201,7 +234,9 @@ describe('Store', () => {
                return Promise.resolve();
             }
          });
-         stubModule = sinon.stub(store, '_testRep').value('test');
+
+         store.options.set('rep', ['test']);
+
          store.checkout('test', '20.1000/branch').catch(() => {
             done();
          });
@@ -213,6 +248,7 @@ describe('Store', () => {
                chai.expect(cmd).to.equal('git reset --hard b2563dfa');
                done();
             }
+
             return Promise.resolve();
          });
 
@@ -225,6 +261,7 @@ describe('Store', () => {
                chai.expect(cmd).to.equal('git checkout -f my/branch');
                done();
             }
+
             return Promise.resolve();
          });
 
@@ -237,6 +274,7 @@ describe('Store', () => {
                chai.expect(cmd).to.equal('git merge remotes/origin/rc-20.4000');
                done();
             }
+
             return Promise.resolve();
          });
 
@@ -249,45 +287,65 @@ describe('Store', () => {
                chai.expect(cmd).to.equal('git merge 123qasdawe');
                done();
             }
+
             return Promise.resolve();
          });
 
          store.checkout('name', 'my/branch:123qasdawe');
       });
-
-      afterEach(() => {
-         stubModule && stubModule.restore();
-      });
    });
 
    describe('.run()', () => {
-      let stubmkdirs, stubRepos, initRepStore, rmdirSync, stubRepConf, stub;
-      it('should make store dir', (done) => {
-         let makeDir;
-         stubmkdirs = sinon.stub(fs, 'mkdirs').callsFake((path) => {
-            makeDir = path;
-         });
-         stubRepos = sinon.stub(store, '_config').value({repositories: {}});
-         initRepStore = sinon.stub(store, 'initRep').callsFake((path) => {
-         });
-         store.run().then(() => {
-            chai.expect(makeDir).to.equal(store._store);
-            done();
-         });
+      let stubmkdirs;
+      let initRepStore;
+      let originalRepos
+
+      beforeEach(() => {
+         originalRepos =  store.options.get('repositories');
       });
 
       afterEach(() => {
+         store.options.set('repositories', originalRepos);
          stubmkdirs && stubmkdirs.restore();
-         stubRepos && stubRepos.restore();
          initRepStore && initRepStore.restore();
-         rmdirSync && rmdirSync.restore();
-         stubRepConf && stubRepConf.restore();
+      });
+
+      it('should make store dir', (done) => {
+         let makeDir;
+
+         store.options.set('repositories', {});
+
+         stubmkdirs = sinon.stub(fs, 'mkdirs').callsFake((path) => {
+            makeDir = path;
+         });
+         initRepStore = sinon.stub(store, 'initRep').callsFake(() => {});
+
+         store.run().then(() => {
+            chai.expect(makeDir).to.equal(store.options.get('store'));
+            done();
+         });
       });
    });
 
    describe('._getForceLoadRepos()', () => {
+      let originalRepos;
+
+      beforeEach(() => {
+         originalRepos =  store.options.get('repositories');
+      });
+
+      afterEach(() => {
+         store.options.set('repositories', originalRepos);
+      });
+
       it('should make store dir', () => {
-         sinon.stub(store, '_config').value({repositories: {'test': {name: 'test', load: true}}});
+         store.options.set('repositories', {
+            test: {
+               name: 'test',
+               load: true
+            }
+         });
+
          chai.expect(new Set(['test'])).to.deep.equal(store._getForceLoadRepos());
       });
    });

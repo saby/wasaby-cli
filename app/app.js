@@ -17,31 +17,30 @@ const resourceRoot = '/';
 
 /**
  * Запускает сервер приложения
- * @param {String} resources Путь до ресурсов
- * @param {Number} port Порт на котором будет запущен сервер
- * @param {Boolean} isDebug Запустить стенд в дебег режиме.
- * @param {Object} config Конфиг приложения
+ * @param {Map<string, any>} options Конфиг приложения.
  */
 
-async function run(resources, port, isDebug, config) {
+async function run( options) {
    // Если иконка не задана в вёрстке, Chrome делает запрос за favicon.ico в корень сайта.
    // Кладём в корень пустой файл, чтобы не получать 404.
    // Когда все демки будут строиться через один роутинг, добавим иконку в вёрстку корневого шаблона.
-   await fs.outputFile(path.join(resources, 'favicon.ico'), '');
+   await fs.outputFile(path.join(options.get('resources'), 'favicon.ico'), '');
 
+   const isDebug = !options.get('release');
    const app = express();
-   const availablePort = await getPort(port || 1024);
-   const rootModule = config.rootModule || '';
-   const reactApp = !!config.reactApp;
+   const availablePort = await getPort(options.get('port') || 1024);
+   const rootModule = options.get('rootModule') || '';
+   const reactApp = !!options.get('reactApp');
    const workDir = process.cwd();
-   process.chdir(resources);
+
+   process.chdir(options.get('resources'));
 
    app.use(bodyParser.json());
    app.use(cookieParser());
    app.use('/', serveStatic('./'));
    app.listen(availablePort);
 
-   const contents = require(path.join(resources, 'contents.json'));
+   const contents = require(path.join(options.get('resources'), 'contents.json'));
 
    if (!isDebug) {
       global.contents = contents;
@@ -81,9 +80,11 @@ async function run(resources, port, isDebug, config) {
       });
    });
 
-   if (config && config.expressRoute) {
-      Object.keys(config.expressRoute).forEach((route) => {
-         let module = require(path.join(path.relative(__dirname, workDir), config.expressRoute[route]));
+   const expressRoute = options.get('expressRoute');
+   if (expressRoute) {
+      Object.keys(expressRoute).forEach((route) => {
+         const module = require(path.join(path.relative(__dirname, workDir), expressRoute[route]));
+
          app.use(route, module);
       });
    }
@@ -100,6 +101,8 @@ async function run(resources, port, isDebug, config) {
          serverSideRender(req, res, { isDebug, reactApp });
       });
    });
+
+   return `http://localhost:${availablePort}`;
 }
 
 function serverSideRender(req, res, config) {

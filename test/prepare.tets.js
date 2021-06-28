@@ -1,29 +1,32 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const fs = require('fs-extra');
-const path = require('path');
 const Prepare = require('../app/prepare');
 
-let makeConfig;
-let writeJSON;
-let existsSync;
-describe('Store', () => {
+describe('Prepare', () => {
+   let prepare;
+   let writeJSON;
+   let existsSync;
+
    beforeEach(() => {
+      const options = new Map([
+         ['repositories', {
+            test1: {},
+            test2: {}
+         }],
+         ['store',  'store'],
+         ['rep', ['name']],
+         ['resources', 'application']
+      ]);
+
       prepare = new Prepare({
-         config: {
-            repositories: {
-               test1: {},
-               test2: {}
-            }
-         },
-         store: 'store',
-         testRep: ['name'],
-         resources: 'application',
-         argvOptions: {}
+         options
       });
+
       writeJSON = sinon.stub(fs, 'writeJSON').callsFake(() => undefined);
       existsSync = sinon.stub(fs, 'existsSync').callsFake(() => undefined);
    });
+
    afterEach(() => {
       writeJSON.restore();
       existsSync.restore();
@@ -34,6 +37,7 @@ describe('Store', () => {
          writeJSON.callsFake(() => {
             done();
          });
+
          Prepare.writeConfig('path/to/config');
       });
 
@@ -46,6 +50,7 @@ describe('Store', () => {
 
    describe('_getPathFromConfig', () => {
       let readJSON;
+
       beforeEach(() => {
          readJSON = sinon.stub(fs, 'readJSON').callsFake(() => ({
             compilerOptions: {
@@ -55,18 +60,22 @@ describe('Store', () => {
             }
          }));
       });
+
       afterEach(() => {
          readJSON.restore();
       });
 
       it('should return paths', async () => {
-         let paths = await prepare._getPathsFromConfig('path/to/config');
+         const paths = await prepare._getPathsFromConfig('path/to/config');
+
          chai.expect({module: ['path/to/module']}).to.deep.equal(paths);
       });
    });
 
    describe('_getPaths', () => {
-      let modulesMapList, modulesMapGet;
+      let modulesMapList;
+      let modulesMapGet;
+
       beforeEach(() => {
          modulesMapList = sinon.stub(prepare._modulesMap, 'getChildModules').callsFake(() => (['testModule']));
          modulesMapGet = sinon.stub(prepare._modulesMap, 'get').callsFake(() => ({
@@ -74,12 +83,15 @@ describe('Store', () => {
             path: 'path/to/module'
          }));
       });
+
       afterEach(() => {
          modulesMapList.restore();
+         modulesMapGet.restore();
       });
 
       it('should return paths', async () => {
-         let paths = await prepare._getPaths();
+         const paths = await prepare._getPaths();
+
          chai.expect(paths).to.have.property('testModule/*');
       });
    });

@@ -26,10 +26,11 @@ const HOT_RELOAD_PORT = 10777;
 class Build extends Base {
    constructor(cfg) {
       super({ ...cfg, ...{ reBuildMap: true } });
-      this._store = cfg.store;
+
       this._builderCfg = path.join(process.cwd(), 'builderConfig.json');
-      if (cfg.builderBaseConfig) {
-         this._builderBaseConfig = path.relative(__dirname, path.join(process.cwd(), cfg.builderBaseConfig));
+
+      if (this.options.has('builderConfig')) {
+         this._builderBaseConfig = path.relative(__dirname, path.join(process.cwd(), this.options.get('builderConfig')));
       } else {
          this._builderBaseConfig = BUILDER_BASE_CONFIG;
       }
@@ -44,17 +45,21 @@ class Build extends Base {
          logger.log('Подготовка тестов');
 
          await this._tslibInstall();
-         if (this._options.buildTools === 'builder') {
+
+         if (this.options.get('buildTools') === 'builder') {
             this._pathTocdn = path.join(__dirname, '../resources', 'cdn');
+
             if (this._shouldStartHotReload()) {
                this._hotReloadPort = await getPort();
             }
+
             await Promise.all([
                this._startHotReloadServer(),
                this._initWithBuilder()
             ]);
          } else {
-            this._pathTocdn = path.join(this._options.resources, 'cdn');
+            this._pathTocdn = path.join(this.options.get('resources'), 'cdn');
+
             await this._initWithJinnee();
             await this._linkCDN();
          }
@@ -65,6 +70,7 @@ class Build extends Base {
          } else {
             e = `Сборка ресурсов завершена с ошибкой: ${e}`;
          }
+
          throw e;
       }
    }
@@ -80,11 +86,18 @@ class Build extends Base {
 
       await this._linkCDN()
       await this._makeBuilderConfig();
-      await this._startBuilder(gulpPath, builderPath, 'build', this._options.argvOptions['log-lever']);
+      await this._startBuilder(gulpPath, builderPath, 'build', this.options.get('log-lever'));
 
-      if (this._options.watcher) {
-         await this._startBuilder(gulpPath, builderPath, 'buildOnChangeWatcher');
+      if (this.options.get('watcher')) {
+        await this._startBuilder(gulpPath, builderPath, 'buildOnChangeWatcher');
       }
+   }
+
+   async startWatcher() {
+      const gulpPath = require.resolve('gulp/bin/gulp.js');
+      const builderPath = require.resolve('sbis3-builder/gulpfile.js');
+
+      return this._startBuilder(gulpPath, builderPath, 'buildOnChangeWatcher');
    }
 
    async _startBuilder(gulpPath, builderPath, buildMode, logLevel) {
@@ -104,7 +117,7 @@ class Build extends Base {
     * @private
     */
    _shouldStartHotReload() {
-      if (this._options.watcher && this._modulesMap.has('HotReload')) {
+      if (this.options.get('watcher') && this._modulesMap.has('HotReload')) {
          return fs.existsSync(this._getHotReloadPath());
       }
       return false;
@@ -142,26 +155,23 @@ class Build extends Base {
     * @private
     */
    async _initWithJinnee() {
-      const logs = path.join(this._options.workDir, 'logs');
+      const logs = path.join(this.options.get('workDir'), 'logs');
+
       const sdk = new Sdk({
-         rc: this._options.rc,
-         workspace: this._options.workspace,
-         pathToJinnee: this._options.pathToJinnee
+         options: this.options
       });
 
       const project = new Project({
-         file: this._options.projectPath,
-         modulesMap: this._modulesMap,
-         workDir: this._options.workDir,
-         builderCache: this._options.builderCache
+         options: this.options,
+         modulesMap: this._modulesMap
       });
 
       await project.prepare();
 
       await sdk.jinneeDeploy(await project.getDeploy(), logs, project.file);
 
-      if (this._options.copy) {
-         Build._copySymlincResources(this._options.resources);
+      if (this.options.get('copy')) {
+         Build._copySymlincResources(this.options.get('resources'));
       }
    }
 
@@ -243,13 +253,16 @@ class Build extends Base {
          path: this._pathTocdn
       });
 
-      builderConfig = this._options.release ? { ...builderConfig, ...RELEASE_FLAGS } : builderConfig;
-      builderConfig.output = this._options.resources;
-      builderConfig.symlinks = !this._options.copy;
+      builderConfig = this.options.get('release') ? { ...builderConfig, ...RELEASE_FLAGS } : builderConfig;
+      builderConfig.output = this.options.get('resources');
+      builderConfig.symlinks = !this.options.get('copy');
+      builderConfig.useReact = !!this.options.get('react');
+
       if (this._hotReloadPort) {
          builderConfig.staticServer = `localhost:${this._hotReloadPort}`;
       }
-      builderConfig.logs = path.join(this._options.workDir, 'logs');
+
+      builderConfig.logs = path.join(this.options.get('workDir'), 'logs');
 
       return fs.outputFile(`./${BUILDER_CONFIG_NAME}`, JSON.stringify(builderConfig, null, 4));
    }

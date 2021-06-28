@@ -35,11 +35,9 @@ const _private = {
  * @class sdk
  * @author Ганшин Я.О.
  */
-class sdk {
+class SDK {
    constructor(cfg) {
-      this._rc = cfg.rc;
-      this._workspace = cfg.workspace;
-      this._pathToJinnee = cfg.pathToJinnee;
+      this.options = cfg.options;
       this._shell = new Shell();
    }
 
@@ -90,8 +88,9 @@ class sdk {
    async getPathToJinnee() {
       const pathToSDK = this.getPathToSdk();
       let pathToJinnee;
-      if (this._pathToJinnee) {
-         pathToJinnee = this._pathToJinnee;
+
+      if (this.options.has('pathToJinnee')) {
+         pathToJinnee = this.options.get('pathToJinnee');
       } else if (process.env.SDK) {
          pathToJinnee = path.join(pathToSDK, 'tools', 'jinnee', 'jinnee.zip');
       } else {
@@ -103,11 +102,13 @@ class sdk {
       }
 
       if (fs.statSync(pathToJinnee).isFile()) {
-         const unpack = path.join(this._workspace, 'jinnee');
+         const unpack = path.join(this.options.get('workspace'), 'jinnee');
+
          await this._shell.execute(
             `7za x ${pathToJinnee} -y -o${unpack} > /dev/null`,
             process.cwd()
          );
+
          return unpack;
       }
 
@@ -121,7 +122,7 @@ class sdk {
     */
    getPathToSdk() {
       let pathToSDK;
-      const sdkVersion = this._rc.replace('rc-', '').replace('.', '');
+      const sdkVersion = this.options.get('rc').replace('rc-', '').replace('.', '');
 
       if (process.env.SDK) {
          pathToSDK = process.env.SDK;
@@ -142,4 +143,4 @@ class sdk {
    }
 }
 
-module.exports = sdk;
+module.exports = SDK;

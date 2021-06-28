@@ -9,27 +9,33 @@ let modulesMap;
 let stubfsAppend;
 describe('modulesMap', () => {
    beforeEach(() => {
+      const options = new Map([
+         ['repositories', {
+            test1: {},
+            test2: {}
+         }],
+         ['store', '']
+      ]);
+
       modulesMap = new ModulesMap({
-         config: {
-            repositories: {
-               test1: {},
-               test2: {}
-            }
-         },
-         store: ''
+         options
       });
       stubfsAppend = sinon.stub(fs, 'appendFileSync').callsFake(() => undefined);
    });
+
    afterEach(() => {
       stubfsAppend.restore();
    });
+
    describe('._findModulesInStore()', () => {
       let stubfs, stubStat, stubExists;
+
       beforeEach(() => {
          stubfs = sinon.stub(fs, 'readdirSync').callsFake((path) => {
             if (path.includes('tttModule')) {
                return ['ttt.txt', 'ttt.s3mod'];
             }
+
             return ['tttModule'];
          });
          stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
@@ -40,6 +46,13 @@ describe('modulesMap', () => {
             };
          });
       });
+
+      afterEach(() => {
+         stubfs.restore();
+         stubStat.restore();
+         stubExists.restore();
+      });
+
       it('should find all modules in repository', () => {
          return chai.expect(modulesMap._findModulesInStore()).to.deep.equal([
             {
@@ -60,26 +73,25 @@ describe('modulesMap', () => {
             }
          ]);
       });
-      afterEach(() => {
-         stubfs.restore();
-         stubStat.restore();
-         stubExists.restore();
-      });
    });
 
    describe('.getRequiredModules()', () => {
-      let stubrepos, stubTestRep, stubModulesMap;
+      let stubModulesMap;
+      let originalRepos;
+      let originalTestRepos;
+
       beforeEach(() => {
-         stubrepos = sinon.stub(modulesMap, '_config').value({
-            repositories: {
-               test1: {
-                  test: 'path'
-               },
-               test2: {
-                  test: 'path'
-               },
-               test3: {}
-            }
+         originalRepos = modulesMap.options.get('repositories');
+         originalTestRepos = modulesMap.options.get('rep');
+
+         modulesMap.options.set('repositories', {
+            test1: {
+               test: 'path'
+            },
+            test2: {
+               test: 'path'
+            },
+            test3: {}
          });
 
          stubModulesMap = sinon.stub(modulesMap, '_modulesMap').value(
@@ -95,47 +107,58 @@ describe('modulesMap', () => {
             ])
          );
       });
+
+      afterEach(() => {
+         modulesMap.options.set('repositories', originalRepos);
+         modulesMap.options.set('rep', originalRepos);
+
+         stubModulesMap.restore();
+      });
+
       it('should return all test', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['all']);
+         modulesMap.options.set('rep', ['all']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test2', 'test_test3', 'test_test4']);
       });
 
       it('should return test list for test1', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test1']);
+         modulesMap.options.set('rep', ['test1']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test1', 'test_test4']);
       });
 
       it('should return test list for test with depends', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test2']);
+         modulesMap.options.set('rep', ['test2']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test2', 'test_test1', 'test_test4']);
       });
 
       it('should return test2 only', () => {
-         sinon.stub(modulesMap, '_only').value(true);
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test2']);
+         modulesMap.options.set('only', true);
+         modulesMap.options.set('rep', ['test2']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test22','test_test2']);
       });
 
       it('should return test list if check two unliked tests', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test4', 'test3']);
+         modulesMap.options.set('rep', ['test4', 'test3']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test4', 'test_test3']);
       });
 
       it('should return modules for test4', () => {
-         stubTestRep = sinon.stub(modulesMap, '_testRep').value(['test4']);
+         modulesMap.options.set('rep', ['test4']);
+
          chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test_test4']);
       });
 
       it('should return modules for test11', () => {
-         stubTestRep = sinon.stub(modulesMap, '_entry').value(['test11']);
+         const stubEntry = sinon.stub(modulesMap, '_entry').value(['test11']);
          modulesMap.get('test11').entry = true;
-         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test11', 'test22' ]);
-      });
 
-      afterEach(() => {
-         stubrepos.restore();
-         stubTestRep.restore();
-         stubModulesMap.restore();
+         chai.expect(modulesMap.getRequiredModules()).to.deep.equal(['test11', 'test22' ]);
+
+         stubEntry.restore();
       });
    });
 
@@ -193,7 +216,6 @@ describe('modulesMap', () => {
          fsRead.restore();
       });
    });
-
 
    describe('_saveMap()', () => {
       let fsExists, fsWrite, fsRead;
@@ -328,7 +350,6 @@ describe('modulesMap', () => {
       })
    });
 
-
    describe('getModulesByRep', () => {
       beforeEach(() => {
          sinon.stub(modulesMap, '_modulesMap').value(
@@ -380,19 +401,24 @@ describe('modulesMap', () => {
    });
 
    describe('.getRequiredRepositories()', () => {
-      let stubrep;
+      let originalRepos;
+      let originalTestRepos;
+
       beforeEach(() => {
-         sinon.stub(modulesMap, '_config').value({
-            repositories: {
-               test1: {
-                  test: 'path'
-               },
-               test2: {
-                  test: 'path'
-               },
-               test3: {}
-            }
+         originalRepos = modulesMap.options.get('repositories');
+         originalTestRepos = modulesMap.options.get('rep');
+
+         modulesMap.options.set('repositories', {
+            test1: {
+               test: 'path'
+            },
+            test2: {
+               test: 'path'
+            },
+            test3: {}
          });
+
+         modulesMap.options.set('rep', ['test1']);
 
          sinon.stub(modulesMap, '_modulesMap').value(
             new Map([
@@ -401,8 +427,11 @@ describe('modulesMap', () => {
                ['test21', {name: 'test21', rep: 'test2', depends: ['test25']}]
             ])
          );
+      });
 
-         stubrep = sinon.stub(modulesMap, '_testRep').value(['test1']);
+      afterEach(() => {
+         modulesMap.options.set('repositories', originalRepos);
+         modulesMap.options.set('rep', originalTestRepos);
       });
 
       it('should return required repositories', () => {
@@ -410,7 +439,8 @@ describe('modulesMap', () => {
       });
 
       it('should not throw error when depend doesnt exists in map', () => {
-         stubrep.value(['test2']);
+         modulesMap.options.set('rep', ['test2']);
+
          chai.expect(() => { modulesMap.getRequiredRepositories()}).not.throw();
       });
    });
