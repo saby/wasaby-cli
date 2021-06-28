@@ -168,7 +168,7 @@ class Build extends Base {
 
       await project.prepare();
 
-      await sdk.jinneeDeploy(await project.getDeploy(), logs, project.file);
+      await sdk.jinneeDeploy(await project.getDeploy(), logs, project.options.get('projectPath'));
 
       if (this.options.get('copy')) {
          Build._copySymlincResources(this.options.get('resources'));
