@@ -41,6 +41,7 @@ class Project {
       if (!this._project) {
          this._project = await xml.readXmlFile(this.options.get('projectPath'));
       }
+
       return this._project;
    }
 
