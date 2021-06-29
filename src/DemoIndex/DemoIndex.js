@@ -80,7 +80,7 @@ class DemoIndex {
    }
 
    _buildIndex(htmlContents) {
-      const title = this.demoModules.size === 1 ? this.demoModules.keys()[0] : 'Demo';
+      const title = this.demoModules.size === 1 ? this.demoModules.keys().next().value : 'Demo';
 
       fs.outputFileSync(path.join(this.options.get('resources'), 'index.html'), Template.page(title, htmlContents));
    }

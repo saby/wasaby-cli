@@ -23,7 +23,7 @@ function setUiModules(srv, modules) {
 /**
  * Класс для работы c файлом проекта .s3cld
  * @class Project
- * @author Ганшин Я.О.
+ * @author Кудрявцев И.С.
  */
 class Project {
    constructor(cfg) {
