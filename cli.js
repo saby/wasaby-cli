@@ -22,7 +22,7 @@ const STORE = path.join(__dirname, 'store/_repos');
 /**
  * Модуль для запуска юнит тестов
  * @class Cli
- * @author Ганшин Я.О.
+ * @author Кудрявцев И.С.
  */
 
 class Cli {

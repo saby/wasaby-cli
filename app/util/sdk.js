@@ -33,7 +33,7 @@ const _private = {
 /**
  * Класс для вызова утилит из сдк
  * @class sdk
- * @author Ганшин Я.О.
+ * @author Кудрявцев И.С.
  */
 class SDK {
    constructor(cfg) {

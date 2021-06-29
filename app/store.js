@@ -10,7 +10,7 @@ const PARALLEL_CHECKOUT = 2;
 /**
  * Класс отвечающий за установку зависимостей
  * @class Store
- * @author Ганшин Я.О.
+ * @author Кудрявцев И.С.
  */
 
 class Store extends Base {
@@ -187,7 +187,8 @@ class Store extends Base {
 
       if (this.options.has('projectPath')) {
          const project = new Project({
-            file: this.options.get('projectPath')
+            options: this.options,
+            modulesMap: this._modulesMap
          });
          const modules = await project.getProjectModules();
 
