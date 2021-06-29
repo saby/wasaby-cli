@@ -9,20 +9,12 @@ const ModulesMap = require('./util/modulesMap');
 
 class Base {
    constructor(cfg) {
-      this.modules = cfg.modules;
+      this.options = cfg.options;
       this._shell = new Shell();
-      this._options = cfg;
       this._modulesMap = new ModulesMap({
-         config: cfg.config,
-         store: cfg.store,
-         testRep: cfg.testRep,
-         resources: cfg.resources,
-         only: cfg.only,
+         options: this.options,
          reBuildMap: cfg.reBuildMap,
-         useOnlyCache: cfg.useOnlyCache,
-         entry: cfg.argvOptions.entry || cfg.config.entry,
-         //TODO Убрать когда возможность задать реализацию будет из корообки.
-         isReact: cfg.isReact
+         useOnlyCache: cfg.useOnlyCache
       });
    }
 

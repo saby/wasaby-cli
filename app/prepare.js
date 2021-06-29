@@ -44,7 +44,7 @@ function generatePathsForWSCore(relativePath) {
 class Prepare extends Base {
    constructor(cfg) {
       super(cfg);
-      this._tsconfig = cfg.tsconfig || BASE_CONFIG;
+      this._tsconfig = this.options.get('tsconfig') || BASE_CONFIG;
    }
 
    async _run() {
@@ -149,7 +149,7 @@ class Prepare extends Base {
     * @private
     */
    _getExclude() {
-      return [path.relative(process.cwd(), this._options.resources), this._options.builderCache];
+      return [path.relative(process.cwd(), this.options.get('resources')), this.options.get('builderCache')];
    }
 
    /**

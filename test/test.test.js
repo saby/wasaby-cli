@@ -12,25 +12,28 @@ let stubExecute;
 let stubSpawn;
 describe('Test', () => {
    beforeEach(() => {
+      const options = new Map([
+         ['rc', 'rc-12'],
+         ['store', ''],
+         ['repositories', {
+            test1: {},
+            test2: {}
+         }],
+         ['workspace', ''],
+         ['workDir', ''],
+         ['resources', ''],
+         ['rep', ['test1']]
+      ]);
+
       test = new Test({
-         rc: 'rc-12',
-         store: '',
-         config: {
-            repositories: {
-               test1: {},
-               test2: {}
-            }
-         },
-         workspace: '',
-         workDir: '',
-         resources: '',
-         testRep: ['test1'],
-         argvOptions: {}
+         options
       });
+
       stubfsAppend = sinon.stub(fs, 'appendFileSync').callsFake(() => undefined);
       stubExecute = sinon.stub(shell.prototype, 'execute').callsFake(() => Promise.resolve());
       stubSpawn = sinon.stub(shell.prototype, 'spawn').callsFake(() => Promise.resolve());
    });
+
    afterEach(() => {
       stubExecute.restore();
       stubfsAppend.restore();
@@ -38,41 +41,58 @@ describe('Test', () => {
    });
 
    describe('._makeTestConfig()', () => {
-      let stubfs, stubTestList;
+      let stubfs;
+      let stubTestList;
+
       beforeEach(() => {
          stubTestList = sinon.stub(test._modulesMap, 'getRequiredModules').callsFake(name => ['test1', 'test2']);
       });
-      it('should make a config files for each modules in confing', (done) => {
-         let baseConfig = require('../testConfig.base.json');
-         let configFiles = {};
-         stubfs = sinon.stub(fs, 'outputFile').callsFake((fileName, config) => {
-            configFiles[fileName] = JSON.parse(config);
-         });
-         test._makeTestConfig({ name: 'test1', path: 'test1.json' }).then(() => {
-            chai.expect(configFiles).to.have.property('test1.json');
-            let config = configFiles['test1.json'];
-            Object.keys(baseConfig).forEach((key) => {
-               chai.expect(config).to.have.property(key);
-            });
-            done();
-         });
-      });
+
       afterEach(() => {
          stubTestList.restore();
          stubfs.restore();
       });
+
+      it('should make a config files for each modules in confing', (done) => {
+         const baseConfig = require('../testConfig.base.json');
+         const configFiles = {};
+
+         stubfs = sinon.stub(fs, 'outputFile').callsFake((fileName, config) => {
+            configFiles[fileName] = JSON.parse(config);
+         });
+
+         test._makeTestConfig({ name: 'test1', path: 'test1.json' }).then(() => {
+            chai.expect(configFiles).to.have.property('test1.json');
+
+            const config = configFiles['test1.json'];
+
+            Object.keys(baseConfig).forEach((key) => {
+               chai.expect(config).to.have.property(key);
+            });
+
+            done();
+         });
+      });
    });
 
    describe('._startBrowserTest()', () => {
-      let stubcli, stubfsjson, stubOutputFile, stubModuleMapGet;
+      let stubfsjson;
+      let stubOutputFile;
+      let stubModuleMapGet;
+
       beforeEach(() => {
-         stubcli = sinon.stub(test._options, 'config').value({
-            test: {
-               unitInBrowser: true
-            }
+         test.options.set('test', {
+            unitInBrowser: true
          });
+
          stubfsjson = sinon.stub(fs, 'readJsonSync').callsFake(() => require('../testConfig.base.json'));
          stubModuleMapGet = sinon.stub(test._modulesMap, 'get').callsFake(name => ({ name: 'test1', testInBrowser: true }));
+      });
+
+      afterEach(() => {
+         stubfsjson.restore();
+         stubOutputFile.restore();
+         stubModuleMapGet.restore();
       });
 
       it('should not run test if testinbrowser was false', () => {
@@ -80,6 +100,7 @@ describe('Test', () => {
          stubOutputFile = sinon.stub(fs, 'outputFile').callsFake((path, config) => {
             throw new Error();
          });
+
          chai.expect(() => test._startBrowserTest('test2')).to.not.throw();
       });
 
@@ -94,24 +115,27 @@ describe('Test', () => {
       });
 
       it('should start test server', (done) => {
-         test = new Test({
-            rc: 'rc-12',
-            store: '',
-            config: {
-               repositories: {
-                  test: {
-                     unitInBrowser: true
-                  }
+         const options = new Map([
+            ['rc', 'rc-12'],
+            ['store', ''],
+            ['repositories', {
+               test: {
+                  unitInBrowser: true
                }
-            },
-            workspace: '',
-            workDir: '',
-            resources: '',
-            server: true,
-            argvOptions: {}
+            }],
+            ['workspace', ''],
+            ['workDir', ''],
+            ['resources', ''],
+            ['server', true]
+         ]);
+
+         test = new Test({
+            options
          });
+
          sinon.stub(test._modulesMap, 'get').callsFake(() => ({ name: 'test1', testInBrowser: true }));
          stubOutputFile = sinon.stub(fs, 'outputFileSync').callsFake(() => undefined);
+
          stubExecute.callsFake((cmd) => {
             chai.expect(cmd).to.includes('server.js');
             done();
@@ -127,32 +151,27 @@ describe('Test', () => {
             done();
          });
          stubExecute.callsFake(() => undefined);
-         test._startBrowserTest('testModule');
-      });
 
-      afterEach(() => {
-         stubcli.restore();
-         stubfsjson.restore();
-         stubOutputFile.restore();
-         stubModuleMapGet.restore();
+         test._startBrowserTest('testModule');
       });
    });
 
    describe('.checkReport()', () => {
-      let stubTestReports, stubexistsSync, stubOtput;
+      let stubTestReports;
+      let stubexistsSync;
+      let stubOtput;
+
       it('should create report when it not exists', (done) => {
          stubTestReports = sinon.stub(test, '_testReports').value(['test', 'test1']);
          stubexistsSync = sinon.stub(fs, 'existsSync').callsFake((name) => {
-            if (name === 'test1') {
-               return false;
-            }
-            return true;
+            return name !== 'test1';
          });
          stubOtput = sinon.stub(fs, 'outputFileSync').callsFake((name, text) => {
             if (name.includes('test1')) {
                done();
             }
          });
+
          test.checkReport();
       });
       it('should not throw an error', () => {
@@ -173,22 +192,16 @@ describe('Test', () => {
    });
 
    describe('.startTest()', () => {
-      let stubmakeTestConfig, stubstartBrowserTest, stubtestList, stubBuild;
+      let stubmakeTestConfig;
+      let stubstartBrowserTest;
+      let stubtestList;
+      let stubBuild;
+
       beforeEach(() => {
          stubmakeTestConfig = sinon.stub(test, '_makeTestConfig').callsFake(() => Promise.resolve());
          stubstartBrowserTest = sinon.stub(test, '_startBrowserTest').callsFake(() => Promise.resolve());
          stubBuild = sinon.stub(test._modulesMap, 'build').callsFake(() => {});
          stubtestList = sinon.stub(test._modulesMap, 'getRequiredModules').callsFake(() => ['engine']);
-      });
-      it('should start test', () => {
-         let commandsArray = [];
-         stubExecute.callsFake((cmd) => {
-            commandsArray.push(cmd);
-            chai.expect(commandsArray).to.includes('node node_modules/saby-units/cli.js --isolated --report --config="./testConfig_engine.json"');
-            return Promise.resolve();
-         });
-         sinon.stub(test, '_shouldTestModule').callsFake(() => true);
-         return test._startTest();
       });
 
       afterEach(() => {
@@ -197,10 +210,29 @@ describe('Test', () => {
          stubtestList.restore();
          stubBuild.restore();
       });
+
+      it('should start test', () => {
+         const commandsArray = [];
+
+         stubExecute.callsFake((cmd) => {
+            commandsArray.push(cmd);
+            chai.expect(commandsArray).to.includes('node node_modules/saby-units/cli.js --isolated --report --config="./testConfig_engine.json"');
+            return Promise.resolve();
+         });
+         sinon.stub(test, '_shouldTestModule').callsFake(() => true);
+
+         return test._startTest();
+      });
    });
 
    describe('.prepareReport()', () => {
-      let stubRead, stubWrite, stubTestReports, fsExistsSync, stubTestError, outputFileSync;
+      let stubRead;
+      let stubWrite;
+      let stubTestReports;
+      let fsExistsSync;
+      let stubTestError;
+      let outputFileSync;
+
       beforeEach(() => {
          stubWrite = sinon.stub(xml, 'writeXmlFile').callsFake(() => undefined);
          stubTestError = sinon.stub(test, '_testErrors').value({});
@@ -210,6 +242,15 @@ describe('Test', () => {
          outputFileSync = sinon.stub(fs, 'outputFileSync').callsFake(() => true);
       });
 
+      afterEach(() => {
+         stubWrite.restore();
+         stubRead.restore();
+         stubTestReports.restore();
+         fsExistsSync.restore();
+         stubTestError.restore();
+         outputFileSync.restore();
+      });
+
       it('should return all test', (done) => {
          stubWrite.callsFake((name, obj) => {
             if (obj.testsuite.testcase[0].$.classname === 'test.test1') {
@@ -217,6 +258,7 @@ describe('Test', () => {
                stubWrite.restore();
             }
          });
+
          test.prepareReport();
       });
 
@@ -230,23 +272,17 @@ describe('Test', () => {
                done();
             }
          });
-         test.prepareReport();
-      });
 
-      afterEach(() => {
-         stubWrite.restore();
-         stubRead.restore();
-         stubTestReports.restore();
-         fsExistsSync.restore();
-         stubTestError.restore();
-         outputFileSync.restore();
+         test.prepareReport();
       });
    });
 
    describe('._shouldTestModule()', () => {
-      let stubDiff, stubGet, stubTestModules;
+      let stubGet;
+      let stubTestModules;
+
       beforeEach(() => {
-         stubDiff = sinon.stub(test, '_diff').value(new Map());
+         test.options.set('diff', new Map());
          stubGet = sinon.stub(test._modulesMap, 'get').callsFake(name => ({
             'test11': { name: 'test11', rep: 'test1', depends: ['test13'] },
             'test12': { name: 'test12', rep: 'test1', depends: [] },
@@ -254,113 +290,146 @@ describe('Test', () => {
          }[name]));
          stubTestModules = sinon.stub(test._modulesMap, 'getModulesByRep').callsFake(() => ['test11', 'test12', 'test13']);
       });
+
       afterEach(() => {
-         stubDiff.restore();
+         test._diff = undefined;
          stubGet.restore();
          stubTestModules.restore();
       });
+
       it('should test module if it existed in diff', () => {
-         stubDiff.value(new Map([['test1', [path.join('test11', 'test1.js')]]]));
+         test._diff = new Map([
+            ['test1', [path.join('test11', 'test1.js')]]
+         ]);
+
          chai.expect(test._shouldTestModule('test11')).to.be.true;
       });
+
       it('should test module if diff was empty', () => {
          chai.expect(test._shouldTestModule('test11')).to.be.true;
       });
+
       it('should not test module if it not existed in diff', () => {
-         stubDiff.value(new Map([['test1', ['test13/1.js']]]));
+         test._diff = new Map([
+            ['test1', ['test13/1.js']]
+         ]);
+
          chai.expect(test._shouldTestModule('test11')).to.be.false;
       });
    });
 
    describe('._getTestConfig()', function() {
       let stubRelative;
+      let originalWorkDir;
+      let originalWorkspace;
+      let originalResources;
+      let stubModuleMap;
+
       beforeEach(() => {
-         sinon.stub(test._options, 'workDir').value('/application');
-         sinon.stub(test._options, 'workspace').value('/application');
-         sinon.stub(test._options, 'resources').value('');
+         test.options.set('workDir', '/application');
+         test.options.set('workspace', '/application');
+         test.options.set('resources', '');
+
          stubRelative = sinon.stub(path, 'relative').callsFake((p) => p);
       });
+
+      afterEach(() => {
+         test.only = false;
+
+         test.options.set('workDir', originalWorkDir);
+         test.options.set('workspace', originalWorkspace);
+         test.options.set('resources', originalResources);
+
+         stubModuleMap && stubModuleMap.restore();
+
+         stubRelative.restore();
+      })
+
       it('should return config', async() => {
-         let cfg = await test._getTestConfig();
-         let base = require('../testConfig.base.json');
+         const cfg = await test._getTestConfig();
+         const base = require('../testConfig.base.json');
+
          for (let prop of Object.keys(base)) {
             chai.expect(cfg).to.have.property(prop);
          }
       });
 
-      it('should set checkLeaks in config', async() => {
-         test._options.chekLeaks = false;
-         let cfg = await test._getTestConfig();
-         chai.expect(cfg.ignoreLeaks).is.true;
-      });
-
       it('should set relative path to nyc', async() => {
-         let cfg = await test._getTestConfig('name');
+         const cfg = await test._getTestConfig('name');
+
          chai.expect('/application/artifacts/name').is.equal(cfg.nyc.reportDir);
          chai.expect(this._workDir).is.equal(cfg.nyc.root);
       });
 
       it('should filter modules from another repository', async() => {
-         sinon.stub(test._modulesMap, '_modulesMap').value(
+         stubModuleMap = sinon.stub(test._modulesMap, '_modulesMap').value(
             new Map([
                ['test11', {name: 'test11', rep: 'test1', depends: ['test22']}],
                ['test22', {name: 'test44', rep: 'test2', depends: []}],
                ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11'], unitTest: true}]
             ])
          );
-         let cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+         const cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+
          chai.expect([ '/application/test11/**/*.js' ]).to.deep.equal(cfg.nyc.include);
       });
 
       it('should filter modules from another repository', async() => {
-         sinon.stub(test._modulesMap, '_modulesMap').value(
+         stubModuleMap = sinon.stub(test._modulesMap, '_modulesMap').value(
             new Map([
                ['test11', {name: 'test11', rep: 'test1', depends: ['test22']}],
                ['test22', {name: 'test44', rep: 'test2', depends: []}],
                ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11'], unitTest: true}],
             ])
          );
-         let cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+         const cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+
          chai.expect([ '/application/test11/**/*.js' ]).to.deep.equal(cfg.nyc.include);
       });
 
       it('should not throw error when module not exists in modules map', async() => {
-         test._options.only = true;
-         sinon.stub(test._modulesMap, '_modulesMap').value(
+         test.only = true;
+         stubModuleMap = sinon.stub(test._modulesMap, '_modulesMap').value(
             new Map([
                ['test11', {name: 'test11', rep: 'test1', depends: []}],
                ['test_test1', {name: 'test_test1', rep: 'test1', depends: ['test11', 'test33'], unitTest: true}],
             ])
          );
-         let cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+         const cfg = await test._getTestConfig('test1', 'node', 'test_test1');
+
          chai.expect([ '/application/test11/**/*.js' ]).to.deep.equal(cfg.nyc.include);
       });
-
-      afterEach(() => {
-         stubRelative.restore();
-      })
    });
 
    describe('._setDiff()', function() {
       let spySetDiff;
 
+      afterEach(() => {
+         test.options.delete('diff');
+         spySetDiff.restore();
+      });
+
       it('shouldnt call setDiff if it disabled ', () => {
-         test._options.diff = false;
+         test.options.set('diff', false);
          spySetDiff = sinon.stub(test, '_setDiffByRep').callsFake(() => Promise.reject());
+
          return test._setDiff();
       });
+
       it('should call setDiff if it enabled with argument test', (done) => {
-         test._options.diff = true;
+         test.options.set('diff', true);
          spySetDiff = sinon.stub(test, '_setDiffByRep').callsFake(() => {
             done();
          });
+
          test._setDiff();
       });
    });
 
    describe('._executeBrowserTestCmd()', () => {
       it('should call _executeBrowserTestCmd twice', () => {
-         let spy = sinon.spy(test, '_executeBrowserTestCmd');
+         const spy = sinon.spy(test, '_executeBrowserTestCmd');
+
          stubExecute.callsFake(() => {
             stubExecute.callsFake(() => Promise.resolve());
             return Promise.reject(['ECHROMEDRIVER']);
@@ -371,10 +440,12 @@ describe('Test', () => {
       });
 
       it('should not infint calls itself', () => {
-         let spy = sinon.spy(test, '_executeBrowserTestCmd');
+         const spy = sinon.spy(test, '_executeBrowserTestCmd');
+
          stubExecute.callsFake(() => {
             return Promise.reject(['ECHROMEDRIVER']);
          });
+
          return test._executeBrowserTestCmd().then(() => {
             chai.expect(5).to.be.equal(spy.callCount);
          });
@@ -382,22 +453,30 @@ describe('Test', () => {
    });
 
    describe('_startNodeTest()', () => {
-      let stubcli, stubfsjson, stubModuleMapGet;
+      let stubfsjson;
+      let stubModuleMapGet;
+
       beforeEach(() => {
-         stubcli = sinon.stub(test._options, 'config').value({
-            test: {
-            }
-         });
+         test.options.set('test',  {});
          stubfsjson = sinon.stub(fs, 'readJsonSync').callsFake(() => require('../testConfig.base.json'));
          stubModuleMapGet = sinon.stub(test._modulesMap, 'get').callsFake(name => ({ name: 'test1', testInBrowser: true }));
       });
+
+      afterEach(() => {
+         test.options.delete('test');
+         test.options.delete('grep');
+         stubModuleMapGet.restore();
+         stubfsjson.restore();
+      });
+
       it('should run tests with grep', (done) => {
-         test._startNodeTest('test1');
-         test._options.argvOptions = { grep: 'testgrep' };
+         test.options.set('grep', 'testgrep');
          stubSpawn.callsFake((cmd, args) => {
             chai.expect(args).to.includes('--grep=testgrep');
             done();
          });
+
+         test._startNodeTest('test1');
       });
    });
 

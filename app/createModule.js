@@ -1,4 +1,3 @@
-const fs = require('fs-extra');
 const path = require('path');
 const Base = require('./base');
 const xml = require('./xml/xml');
@@ -14,20 +13,25 @@ const DEFAULT_DEPENDS = ['Controls', 'Types', 'Env'];
 class CreateModule extends Base {
    constructor(cfg) {
       super(cfg);
-      let modulePath = cfg.path;
+
+      let modulePath = this.options.get('path');
+
       if (!path.isAbsolute(modulePath)) {
          modulePath = path.normalize(path.join(process.cwd(), modulePath));
       }
+
       this._moduleName = path.basename(modulePath);
-      this._modulePath = path.join(cfg.path, this._moduleName + '.s3mod');
+      this._modulePath = path.join(this.options.get('path'), this._moduleName + '.s3mod');
    }
 
    async _run() {
       const module = await xml.readXmlFile(DEFAULT_MODULE);
       const moduleDepends = { module: [] };
+
       module.ui_module.depends = [moduleDepends];
       module.ui_module.$.id = CreateModule.createGuid();
       module.ui_module.$.name = this._moduleName;
+
       DEFAULT_DEPENDS.forEach((name) => {
          const cfg = this._modulesMap.get(name);
          moduleDepends.module.push({
@@ -37,6 +41,7 @@ class CreateModule extends Base {
             }
          });
       });
+
       await xml.writeXmlFile(this._modulePath, module);
    }
 

@@ -6,7 +6,6 @@ const sinon = require('sinon');
 const Git = require('../app/util/git');
 const shell = require('../app/util/shell');
 const fs = require('fs-extra');
-const config = require('../app/util/config');
 
 let git;
 let stubExecute;
@@ -65,23 +64,6 @@ describe('Git', () => {
             });
         });
     });
-    describe('getVersion()', () => {
-        let getPackageConfig, getVersion;
-        beforeEach(() => {
-            getPackageConfig = sinon.stub(config, 'getPackageConfig').callsFake(() =>  undefined);
-            getVersion = sinon.stub(config, 'getVersion').callsFake(() =>  undefined);
-        });
-
-        it('should not call getVersion if config is empty', () => {
-            getVersion.callsFake(() => {throw  new Error()});
-            chai.expect(() => git.getVersion()).does.not.throw();
-        });
-
-        afterEach(() => {
-            getPackageConfig.restore();
-            getVersion.restore();
-        })
-    })
 
     describe('getRcBranch()', () => {
         it('should return rc-21.2000', () => {

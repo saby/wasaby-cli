@@ -17,13 +17,6 @@ class Store extends Base {
    constructor(cfg) {
       cfg.useOnlyCache = true;
       super(cfg);
-      this._store = cfg.store;
-      this._argvOptions = cfg.argvOptions;
-      this._config = cfg.config;
-      this._rc = cfg.rc;
-      this.cdnVersion = cfg.cdnVersion;
-      this._testRep = cfg.testRep;
-      this._projectPath = cfg.projectPath;
    }
 
    /**
@@ -33,7 +26,7 @@ class Store extends Base {
    async _run() {
       logger.log('Инициализация хранилища');
       try {
-         await fs.mkdirs(this._store);
+         await fs.mkdirs(this.options.get('store'));
 
          await pMap(await this._getReposList(), (rep) => {
             return this.initRep(rep);
@@ -53,11 +46,11 @@ class Store extends Base {
     * @return {Promise<void>}
     */
    async initRep(name) {
-      const cfg = this._config.repositories[name];
+      const cfg = this.options.get('repositories')[name];
 
       // если есть путь до репозитория то его не надо выкачивать
       if (!cfg.skip && !cfg.path) {
-         const branch = this.getCheckoutBranch(name, cfg);
+         const branch = this.getCheckoutBranch(name);
 
          await this.cloneRepToStore(name);
          await this.checkout(
@@ -67,12 +60,18 @@ class Store extends Base {
       }
    }
 
-   getCheckoutBranch(nameRepos, config) {
-      if (nameRepos.endsWith('-cdn') || nameRepos.endsWith('_cdn')) {
-         return this._argvOptions[nameRepos] || this.cdnVersion || config.version || this._rc;
+   getCheckoutBranch(nameRepos) {
+      const isCdn = nameRepos.endsWith('-cdn') || nameRepos.endsWith('_cdn');
+
+      if (this.options.has(nameRepos)) {
+         return this.options.get(nameRepos);
       }
 
-      return this._argvOptions[nameRepos] || config.version || this._rc;
+      if (isCdn && this.options.has('cdn')) {
+         return this.options.get('cdn');
+      }
+
+      return this.options.get('rc');
    }
 
    /**
@@ -87,7 +86,7 @@ class Store extends Base {
       }
 
       const git = new Git({
-         path: path.join(this._store, name),
+         path: path.join(this.options.get('store'), name),
          name: name
       });
       let [branch, mergeWith] = commit.split(':');
@@ -114,7 +113,7 @@ class Store extends Base {
       await git.clean();
 
       if (isBranch && !branch.includes('rc-')) {
-         mergeWith = mergeWith || Git.getRcBranch(branch) || git.getVersion() || this._rc;
+         mergeWith = mergeWith || Git.getRcBranch(branch) || this.options.get('rc');
 
          logger.log(`Попытка смержить ветку '${branch}' с '${mergeWith}'`, name);
 
@@ -128,12 +127,15 @@ class Store extends Base {
     * @return {Promise<*|string>}
     */
    async cloneRepToStore(name) {
-      if (!fs.existsSync(path.join(this._store, name))) {
+      if (!fs.existsSync(path.join(this.options.get('store'), name))) {
          try {
-            logger.log(`git clone ${this._config.repositories[name].url}`, name);
-            await this._shell.execute(`git clone ${this._config.repositories[name].url} ${name}`, this._store, {
-               processName: `clone ${name}`
-            });
+            const url = this.options.get('repositories')[name].url;
+
+            logger.log(`git clone ${url} in directory ${this.options.get('store')}`, name);
+            await this._shell.execute(
+               `git clone ${url} ${name}`,
+               this.options.get('store'),
+               { processName: `clone ${name}` });
          } catch (err) {
             throw new Error(`Ошибка при клонировании репозитория ${name}: ${err}`);
          }
@@ -146,13 +148,15 @@ class Store extends Base {
     * @private
     */
    async _getReposList() {
-      if (this._testRep.includes('all')) {
-         return new Set(Object.keys(this._config.repositories));
+      if (this.options.get('rep').includes('all')) {
+         return new Set(Object.keys(this.options.get('repositories')));
       }
+
       const reposFromMap = this._modulesMap.getRequiredRepositories();
       const reposFromArgv = this._getReposFromArgv();
       const reposFromProject = await this._getProjectRepos();
       const reposFromConfig = this._getForceLoadRepos();
+
       return new Set([...reposFromMap, ...reposFromArgv, ...reposFromProject, ...reposFromConfig]);
    }
 
@@ -163,11 +167,13 @@ class Store extends Base {
     */
    _getReposFromArgv() {
       const repos = new Set();
-      for (const name of Object.keys(this._config.repositories)) {
-         if (this._argvOptions.hasOwnProperty(name)) {
+
+      for (const name of Object.keys(this.options.get('repositories'))) {
+         if (this.options.has(name)) {
             repos.add(name);
          }
       }
+
       return repos;
    }
 
@@ -178,11 +184,13 @@ class Store extends Base {
     */
    async _getProjectRepos() {
       const repos = new Set();
-      if (this._projectPath) {
+
+      if (this.options.has('projectPath')) {
          const project = new Project({
-            file: this._projectPath
+            file: this.options.get('projectPath')
          });
          const modules = await project.getProjectModules();
+
          modules.forEach(name => {
             if (this._modulesMap.has(name)) {
                const cfg = this._modulesMap.get(name);
@@ -190,6 +198,7 @@ class Store extends Base {
             }
          });
       }
+
       return repos;
    }
 
@@ -200,11 +209,13 @@ class Store extends Base {
     */
    _getForceLoadRepos() {
       const repos = new Set();
-      for (const name of Object.keys(this._config.repositories)) {
-         if (this._config.repositories[name].load) {
+
+      for (const [name, rep] of Object.entries(this.options.get('repositories'))) {
+         if (rep.load) {
             repos.add(name);
          }
       }
+
       return repos;
    }
 }

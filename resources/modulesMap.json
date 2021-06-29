@@ -162,12 +162,10 @@
       "Layout-default-theme",
       "Wizard-default-theme",
       "RichEditor-default-theme",
-      "EngineUser-default-theme",
       "Export",
       "Export-default-theme",
       "Import",
       "Import-default-theme",
-      "Router",
       "SbisEnvUI",
       "SbisEnvUI-default-theme",
       "Animation",
@@ -180,9 +178,7 @@
       "ViewConfiguration",
       "ViewConfiguration-default-theme",
       "StylesConfiguration",
-      "StylesConfiguration-default-theme",
       "DocsEditor",
-      "DocsEditor-default-theme",
       "Emotions",
       "Emotions-default-theme",
       "Carousel",
@@ -611,7 +607,6 @@
       "Env",
       "Types",
       "Layout-default-theme",
-      "EngineUser-default-theme",
       "RequireJsLoader",
       "Hint"
     ],
@@ -1000,7 +995,6 @@
       "RUM",
       "Notes",
       "ServiceUpdateNotifier",
-      "EngineUser-default-theme",
       "Page",
       "RequireJsLoader",
       "WasabyLoader",
@@ -1157,7 +1151,6 @@
       "Types",
       "Browser",
       "EngineUser",
-      "EngineUser-default-theme",
       "RequireJsLoader"
     ],
     "id": "c2a19efd-3f57-4fe7-9e66-921fd3adad54",
@@ -1268,8 +1261,7 @@
       "Types",
       "Controls",
       "Controls-default-theme",
-      "EngineUser",
-      "EngineUser-default-theme"
+      "EngineUser"
     ],
     "id": "2778d7e0-5245-4c2b-8c09-1eba9d67afcc",
     "required": false,
@@ -1373,7 +1365,6 @@
       "ViewConfiguration-default-theme",
       "Wizard-default-theme",
       "RichEditor-default-theme",
-      "EngineUser-default-theme",
       "NavigationPanels-default-theme",
       "Calculator",
       "Export",
@@ -2054,7 +2045,8 @@
     "depends": [
       "Router",
       "WS.Core",
-      "I18n"
+      "I18n",
+      "RequireJsLoader"
     ],
     "id": "a857d050-c754-4d39-90ec-fca5e2ddf033",
     "required": true,
@@ -2155,7 +2147,8 @@
       "Router",
       "SbisEnvUI",
       "SbisEnvUI-default-theme",
-      "Env"
+      "Env",
+      "SBIS3.CONTROLS"
     ],
     "id": "85db6f66-683e-4ab1-9531-cfa9a718f696",
     "required": true,
@@ -4041,7 +4034,6 @@
     "entry": false,
     "depends": [
       "ImageEditor2",
-      "ImageEditor2-default-theme",
       "Router"
     ],
     "id": "256bcf0b-2d79-4e15-aa88-e496773b76a5",
@@ -4094,7 +4086,6 @@
       "LongOperations-default-theme",
       "NavigationPanels",
       "UserStatus",
-      "EngineUser-default-theme",
       "NavigationPanels-default-theme",
       "Router",
       "Page",
@@ -4113,7 +4104,8 @@
       "ServiceUpdateNotifier",
       "App",
       "Configuration",
-      "WidgetsPage"
+      "WidgetsPage",
+      "Headers"
     ],
     "id": "16d6a735-086e-458b-963d-2dfa97f48c62",
     "required": true,
@@ -4259,7 +4251,8 @@
       "Types",
       "Controls-default-theme",
       "UI",
-      "ExtControls"
+      "ExtControls",
+      "Env"
     ],
     "id": "e86caf7c-156a-4858-8710-fcf3d8abcfbf",
     "required": false,
@@ -4582,8 +4575,7 @@
       "WS.Core",
       "Env",
       "UI",
-      "RequireJsLoader",
-      "Hint"
+      "RequireJsLoader"
     ],
     "id": "a091f1f2-8439-4e3f-b0b8-11f4540a6395",
     "required": true,
@@ -5110,7 +5102,8 @@
       "Carousel-default-theme",
       "PollWizard",
       "LongOperations",
-      "LongOperations-default-theme"
+      "LongOperations-default-theme",
+      "RichEditor"
     ],
     "id": "b455fe88-d470-4f9b-8997-2f0df293cc9c",
     "required": true,
@@ -5452,7 +5445,7 @@
       "UI"
     ],
     "id": "59884750-b14c-43df-b956-aee5b31bbf97",
-    "required": true,
+    "required": false,
     "forCDN": false
   },
   "ExpandableCollection-default-theme": {
@@ -5467,7 +5460,21 @@
       "ExpandableCollection"
     ],
     "id": "3630e495-2a15-4638-8126-031a2dd452df",
-    "required": true,
+    "required": false,
+    "forCDN": false
+  },
+  "CodeEditor": {
+    "s3mod": "sbis3.engine\\client\\CodeEditor\\CodeEditor.s3mod",
+    "name": "CodeEditor",
+    "path": "sbis3.engine\\client\\CodeEditor",
+    "rep": "sbis3.engine",
+    "useModuleMap": false,
+    "entry": false,
+    "depends": [
+      "UI"
+    ],
+    "id": "21ab525a-9dd6-420a-9f55-95f196ff623d",
+    "required": false,
     "forCDN": false
   }
 }

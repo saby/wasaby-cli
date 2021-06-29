@@ -113,15 +113,17 @@ const _private = {
 class Test extends Base {
    constructor(cfg) {
       super(cfg);
+      this.only = cfg.only;
       this._testReports = new Map();
       this._testErrors = {};
-      this._report = cfg.report || 'xml';
-      this._testOnlyBrowser = cfg.browser || cfg.server;
+      this._report = this.options.get('report') || 'xml';
+      this._testOnlyBrowser = this.options.get('browser') || this.options.get('server');
       this._allowedErrorsSet = new Set();
       this._diff = new Map();
       this._portMap = new Map();
       this._restartCounter = {};
       this.startedTests = {};
+
       if (this._report === 'console') {
          logger.silent();
       }
@@ -214,25 +216,25 @@ class Test extends Base {
 
       // common options
       cfg.tests = testModules instanceof Array ? testModules : [testModules];
-      cfg.root = fsUtil.relative(process.cwd(), this._options.resources);
+      cfg.root = fsUtil.relative(process.cwd(), this.options.get('resources'));
       cfg.report = this.getReportPath(fullName);
-      cfg.ignoreLeaks = !this._options.checkLeaks;
+      cfg.ignoreLeaks = true;
 
       this.startedTests[fullName] = cfg.report;
 
       // coverage options
-      const workspace = fsUtil.relative(this._options.workDir, this._options.workspace) || '.';
+      const workspace = fsUtil.relative(this.options.get('workDir'), this.options.get('workspace')) || '.';
 
       cfg.htmlCoverageReport = cfg.htmlCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.jsonCoverageReport = cfg.jsonCoverageReport.replace('{module}', fullName).replace('{workspace}', workspace);
       cfg.nyc = {
          include: [],
          reportDir: path.dirname(cfg.jsonCoverageReport),
-         cwd: this._options.workDir,
-         report: AVAILABLE_REPORT_FORMAT.includes(this._options.coverage) ? this._options.coverage : 'html'
+         cwd: this.options.get('workDir'),
+         report: AVAILABLE_REPORT_FORMAT.includes(this.options.get('coverage')) ? this.options.get('coverage') : 'html'
       };
 
-      const nycPath = path.relative(this._options.workDir, this._options.resources);
+      const nycPath = path.relative(this.options.get('workDir'), this.options.get('resources'));
       const namesArray = (names instanceof Array) ? names : [names];
 
       cfg.tests.forEach((testModuleName) => {
@@ -245,7 +247,7 @@ class Test extends Base {
          moduleCfg.depends.forEach((dependModuleName) => {
             const dependModuleCfg = this._modulesMap.get(dependModuleName);
 
-            if (!this._options.only || (dependModuleCfg && namesArray.includes(dependModuleCfg.rep))) {
+            if (!this.only || (dependModuleCfg && namesArray.includes(dependModuleCfg.rep))) {
                cfg.nyc.include.push(`${nycPath ? nycPath + '/' : ''}${dependModuleName.replace(/ /g, '_')}/**/*.js`);
             }
          });
@@ -269,7 +271,7 @@ class Test extends Base {
     */
    _getUIModulesPaths(config) {
       const uiModules = Array.isArray(config.testModules) ? config.testModules : [config.testModules];
-      const buildPaths = uiModules.map((moduleName) => path.join(this._options.resources, moduleName));
+      const buildPaths = uiModules.map((moduleName) => path.join(this.options.get('resources'), moduleName));
       const sourcePaths = uiModules.map((moduleName) => this._modulesMap.get(moduleName).path);
 
       return {
@@ -289,9 +291,9 @@ class Test extends Base {
       const fullName = `${config.name}${suffix || ''}`;
       const cfg = {...require('../jestTestConfig.base.json')};
       // Корневая директория с скомпилированными файлами (параметр --copy обязателен)
-      const applicationDir = this._options.resources;
+      const applicationDir = this.options.get('resources');
       // Директория ветки, либо корневая директория локального репозитория для кеша и артефактов
-      const workspace = this._options.workspace || '.';
+      const workspace = this.options.get('workspace') || '.';
       const coverageDirectory = path.join(workspace, 'artifacts', fullName);
       // Директория, в которой хранится кеш для фреймворка Jest
       const cacheDir = path.join(workspace, 'jest-cache');
@@ -308,12 +310,12 @@ class Test extends Base {
       cfg.roots = roots;
       cfg.moduleDirectories.push(applicationDir);
       cfg.cacheDirectory = cacheDir;
-      cfg.collectCoverage = !!this._options.coverage;
+      cfg.collectCoverage = !!this.options.get('coverage');
       cfg.collectCoverageFrom = [
          '**/*.{js,jsx}'
       ];
       cfg.coverageDirectory = coverageDirectory;
-      if (this._options.only) {
+      if (this.only) {
          cfg.coverageReporters.push('text');
       }
       cfg.setupFilesAfterEnv.push(setupFilePath);
@@ -324,7 +326,7 @@ class Test extends Base {
       cfg.testEnvironmentOptions.url = `http://localhost:${config.port}`;
       cfg.testEnvironmentOptions.referrer = `http://localhost:${config.port}`;
 
-      if (!this._options.only) {
+      if (!this.only) {
          logger.log(`[JEST CONFIG]`);
          logger.log(JSON.stringify(cfg, null, ' '));
       }
@@ -337,7 +339,7 @@ class Test extends Base {
     * @returns {string}
     */
    getReportPath(fullName) {
-      const workspace = fsUtil.relative(process.cwd(), this._options.workspace);
+      const workspace = fsUtil.relative(process.cwd(), this.options.get('workspace'));
       return REPORT_PATH.replace('{module}', fullName)
          .replace('{workspace}', workspace || '.');
    }
@@ -370,8 +372,8 @@ class Test extends Base {
          return false;
       }
 
-      // Если this._options.only, то moduleName - имя тестируемого репозитория, иначе это имя тестируемого модуля.
-      const repName = this._options.only ? moduleName : this._modulesMap.get(moduleName).rep;
+      // Если this.only, то moduleName - имя тестируемого репозитория, иначе это имя тестируемого модуля.
+      const repName = this.only ? moduleName : this._modulesMap.get(moduleName).rep;
 
       return JEST_ALLOWED_REPOS.includes(repName);
    }
@@ -408,7 +410,7 @@ class Test extends Base {
       const sourceModules = JSON.stringify(uiModulesPaths.sourcePaths, null, ' ').slice(1, -1);
       const buildModules = JSON.stringify(uiModulesPaths.buildPaths, null, ' ').slice(1, -1);
 
-      const buildDirectory = this._options.resources;
+      const buildDirectory = this.options.get('resources');
       const testUIModuleName = uiModulesPaths.uiModules[0];
       const testPathForConsistencyCheck = path.join(buildDirectory, testUIModuleName, 'Component/index.js');
 
@@ -443,18 +445,20 @@ class Test extends Base {
     * @private
     */
    _startTest() {
-      if (this._options.only) {
+      if (this.only) {
          // если тесты запускаются только по одному репозиторию то не разделяем их по модулям
-         logger.log('Запуск тестов', this._options.testRep);
-         let modules = this._modulesMap.getTestModulesByRep(this._options.testRep[0]);
+         const repository = this.options.get('rep')[0];
+         const modules = this._modulesMap.getTestModulesByRep(repository);
+
+         logger.log('Запуск тестов', repository);
 
          return Promise.all([
-            this._startNodeTest(this._options.testRep, modules),
-            this._startBrowserTest(this._options.testRep, modules)
+            this._startNodeTest(repository, modules),
+            this._startBrowserTest(repository, modules)
          ]);
       }
 
-      return pMap(this._modulesMap.getUnitsTestModules(this.modules), (moduleName) => {
+      return pMap(this._modulesMap.getUnitsTestModules(this.options.get('modules')), (moduleName) => {
          if (this._shouldTestModule(moduleName)) {
             logger.log('Запуск тестов', moduleName);
 
@@ -509,7 +513,7 @@ class Test extends Base {
          };
 
          // TODO: Нужен хороший флаг
-         const isCI = !this._options.only;
+         const isCI = !this.only;
          const unitsPath = require.resolve('saby-units/cli.js');
          const outputFile = this.getReportPath(fullName);
          const otherArguments = this._getUnknownArgs(['tasks', 'copy', 'react']);
@@ -540,7 +544,7 @@ class Test extends Base {
 
          if (isBrowser) {
             args.push(`--port=${port}`);
-            args.push(`--root=${this._options.resources}`);
+            args.push(`--root=${this.options.get('resources')}`);
          }
 
          await this._makeJestSnapshotResolver(config);
@@ -599,7 +603,7 @@ class Test extends Base {
             });
 
             const unitsPath = require.resolve('saby-units/cli.js');
-            const coverage = this._options.coverage ? '--coverage' : '';
+            const coverage = this.options.get('coverage') ? '--coverage' : '';
             const report = this._report === 'xml' ? '--report' : '';
             const otherArguments = this._getUnknownArgs(['tasks']);
             let args = [
@@ -649,16 +653,20 @@ class Test extends Base {
     */
    async _startBrowserTest(name, testModules) {
       const moduleCfg = this._modulesMap.get(name);
-      const canRunBrowserTests =  !this._options.node && (
+      const canRunBrowserTests = !this.options.get('node') && (
          (moduleCfg && moduleCfg.testInBrowser) || !moduleCfg || this._testOnlyBrowser
       );
+
       if (canRunBrowserTests) {
          const moduleName = `${name}`;
+
          if (this._shouldRunJestFramework(moduleName)) {
             return this._startJestTest(name, testModules, true);
          }
+
          const configPath = _private.getPathToTestConfig(name, true);
-         const coverage = this._options.coverage ? ' --coverage' : '';
+         const coverage = this.options.get('coverage') ? ' --coverage' : '';
+
          logger.log('Запуск тестов в браузере', name);
 
          await this._makeTestConfig({
@@ -668,7 +676,7 @@ class Test extends Base {
             isBrowser: true
          });
 
-         if (this._options.server) {
+         if (this.options.get('server')) {
             await Promise.all([
                this._executeBrowserTestCmd(
                   `node ${require.resolve('saby-units/cli/server.js')} --configUnits=${configPath}`,
@@ -756,7 +764,7 @@ class Test extends Base {
 
          logger.writeLogFile('testOrder.json', JSON.stringify(this.startedTests, null, 3));
 
-         if (!this._options.server && this._report === 'xml') {
+         if (!this.options.get('server') && this._report === 'xml') {
             await this.checkReport();
             await this.prepareReport();
          }
@@ -775,13 +783,15 @@ class Test extends Base {
     */
    _setDiff() {
       const result = [];
-      if (this._options.diff) {
-         for (const name of this._options.testRep) {
+
+      if (this.options.get('diff')) {
+         for (const name of this.options.get('rep')) {
             if (name !== 'all') {
                result.push(this._setDiffByRep(name));
             }
          }
       }
+
       return Promise.all(result);
    }
 
@@ -797,8 +807,10 @@ class Test extends Base {
          name: repName
       });
       const branch = await git.getBranch();
-      if (this._options.rc && branch !== this._options.rc) {
-         this._diff.set(repName, await git.diff(branch, this._options.rc));
+      const rc = this.options.get('rc');
+
+      if (rc && branch !== rc) {
+         this._diff.set(repName, await git.diff(branch, rc));
       }
    }
 
@@ -837,21 +849,20 @@ class Test extends Base {
    _getUnknownArgs(ignoreArgs = []) {
       // FIXME: ignoreArgs нужен, чтобы Jest не ругался на неизвестные параметры.
       //  Выяснить, почему --tasks, --react, --copy остались необработанными и убрать фильтрацию.
-      let args = [];
-      Object.keys(this._options.argvOptions).forEach((name) => {
-         if (!this._options.hasOwnProperty(name)) {
-            if (ignoreArgs.includes(name)) {
-               return;
-            }
-            let value = this._options.argvOptions[name];
-            if (typeof value === 'boolean') {
-               args.push(`--${name}`);
-            } else {
-               value = value.includes(' ') ? `"${value}"` : value;
-               args.push(`--${name}=${value}`);
-            }
+      const args = [];
+
+      for (const [name, value] of this.options) {
+         if (ignoreArgs.includes(name) || typeof value === 'object') {
+            continue;
          }
-      });
+
+         if (typeof value === 'boolean') {
+            args.push(`--${name}`);
+         } else {
+            args.push(`--${name}=${value.includes(' ') ? `"${value}"` : value}`);
+         }
+      }
+
       return args;
    }
 }

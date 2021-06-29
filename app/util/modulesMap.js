@@ -15,16 +15,11 @@ const ownDependencies = ['Router', 'HotReload', 'DemoStand'];
  */
 class ModulesMap {
    constructor(cfg) {
-      this._config = cfg.config;
-      this._entry = ModulesMap.prepareEntryPointModules(cfg.entry);
-      this._store = cfg.store;
-      this._testRep = cfg.testRep;
+      this.options = cfg.options;
+      this._entry = ModulesMap.prepareEntryPointModules(this.options.get('entry'));
       this._modulesMap = new Map();
-      this._resources = cfg.resources;
-      this._only = cfg.only;
       this._reBuildMap = cfg.reBuildMap;
       this._useOnlyCache = cfg.useOnlyCache;
-      this.isReact = cfg.isReact;
    }
 
    /**
@@ -118,17 +113,20 @@ class ModulesMap {
       if (this._modulesList) {
          return this._modulesList;
       }
+
       let list = [];
+
       if (this._entry.length > 0) {
          list = this.getChildModules(this.getEntryModules());
-      } else if (this._only) {
-         this._testRep.forEach((name) => {
+      } else if (this.options.get('only')) {
+         this.options.get('rep').forEach((name) => {
             list = list.concat(this.getModulesByRep(name));
          });
-      } else if (!this._testRep.includes('all')) {
-         this._testRep.forEach((testRep) => {
+      } else if (!this.options.get('rep').includes('all')) {
+         this.options.get('rep').forEach((testRep) => {
             const modules = this.getParentModules(this.getModulesByRep(testRep));
             const requiredModules = this.getTestModulesByRep(testRep);
+
             list = list.concat(requiredModules.length > 0 ? requiredModules : this.getModulesByRep(testRep));
             modules.forEach((name) => {
                const cfg = this._modulesMap.get(name);
@@ -195,7 +193,7 @@ class ModulesMap {
          return unitModules;
       }
 
-      if (this._testRep.includes('all')) {
+      if (this.options.get('rep').includes('all')) {
          return this.getTestModulesByRep('all');
       }
 
@@ -204,7 +202,7 @@ class ModulesMap {
       }
 
       const result = new Set();
-      this._testRep.forEach((testRep) => {
+      this.options.get('rep').forEach((testRep) => {
          for (const module of this.filterUnitTestModules(this.getParentModules(this.getModulesByRep(testRep)))) {
             result.add(module);
          }
@@ -280,14 +278,16 @@ class ModulesMap {
     */
    _findModulesInStore(onlyLocal) {
       const s3mods = [];
-      Object.keys(this._config.repositories).forEach((name) => {
-         if (onlyLocal && !this._config.repositories[name].localeRep) {
+      const repositories = this.options.get('repositories');
+
+      Object.keys(repositories).forEach((name) => {
+         if (onlyLocal && !repositories[name].localeRep) {
             return;
          }
 
          let repositoryPath = this.getRepositoryPath(name);
-         if (this._config.repositories[name].modulesPath) {
-            repositoryPath = path.join(repositoryPath, this._config.repositories[name].modulesPath);
+         if (repositories[name].modulesPath) {
+            repositoryPath = path.join(repositoryPath, repositories[name].modulesPath);
          }
 
          walkDir(repositoryPath, (filePath) => {
@@ -303,12 +303,18 @@ class ModulesMap {
                   name: moduleName,
                   path: path.join(repositoryPath, modulePath),
                   rep: name,
-                  useModuleMap: this._config.repositories[name].useMapOnly || false,
+                  useModuleMap: repositories[name].useMapOnly || false,
                   entry: this._entry.includes(absolutePath)
                });
             }
-         }, [path.join(repositoryPath, 'build-ui'), path.join(repositoryPath, 'node_modules'), this._resources]);
+         },
+            [
+               path.join(repositoryPath, 'build-ui'),
+               path.join(repositoryPath, 'node_modules'),
+               this.options.get('resources')
+            ]);
       });
+
       return s3mods;
    }
 
@@ -347,7 +353,7 @@ class ModulesMap {
                }
 
                if (xmlObj.ui_module.unit_test) {
-                  const repCfg = this._config.repositories[cfg.rep];
+                  const repCfg = this.options.get('repositories')[cfg.rep];
                   const onlyNode = xmlObj.ui_module.unit_test[0].$ && xmlObj.ui_module.unit_test[0].$.onlyNode;
                   cfg.unitTest = true;
                   cfg.testInBrowser = repCfg.unitInBrowser && !(onlyNode);
@@ -359,7 +365,7 @@ class ModulesMap {
 
                // TODO Убрать когда возможность задать реализацию будет из корообки.
                if (xmlObj.ui_module.$.is_react === '1') {
-                  if (this.isReact) {
+                  if (this.options.get('react')) {
                      cfg.isReact = true;
                      this._modulesMap.set(cfg.name, cfg);
                   }
@@ -379,7 +385,7 @@ class ModulesMap {
     * @return {string}
     */
    getRepositoryPath(repName) {
-      return this._config.repositories[repName].path || path.join(this._store, repName);
+      return this.options.get('repositories')[repName].path || path.join(this.options.get('store'), repName);
    }
 
    /**
@@ -408,12 +414,12 @@ class ModulesMap {
       for (let key of Object.keys(mapObject)) {
          if (!this._modulesMap.has(key)) {
             let mapObjectValue = mapObject[key];
-            mapObjectValue.path = path.join(this._store, mapObjectValue.path);
-            mapObjectValue.s3mod = path.join(this._store, mapObjectValue.s3mod);
+            mapObjectValue.path = path.join(this.options.get('store'), mapObjectValue.path);
+            mapObjectValue.s3mod = path.join(this.options.get('store'), mapObjectValue.s3mod);
 
             // TODO Убрать когда возможность задать реализацию будет из корообки.
             if (mapObjectValue.isReact === true) {
-               if (this.isReact) {
+               if (this.options.get('react')) {
                   this._modulesMap.set(key, mapObjectValue);
                }
             } else {
@@ -438,8 +444,8 @@ class ModulesMap {
          mapObject[key] = {
             ...value,
             ...{
-               path: path.relative(this._store, value.path),
-               s3mod: path.relative(this._store, value.s3mod)
+               path: path.relative(this.options.get('store'), value.path),
+               s3mod: path.relative(this.options.get('store'), value.s3mod)
             }
          };
       });

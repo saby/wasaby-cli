@@ -1,5 +1,4 @@
 const Shell = require('./shell');
-const config = require('./config');
 const ERROR_MERGE_CODE = 101;
 const logger = require('../util/logger');
 
@@ -190,19 +189,6 @@ class Git {
       });
 
       return res.length > 0 ? res[0] : '';
-   }
-
-   /**
-    * Возвращает версию из package.json
-    * @returns {String}
-    */
-   getVersion() {
-      const packageConfig = config.getPackageConfig(this._path);
-      if (packageConfig) {
-         return config.getVersion(packageConfig);
-      }
-
-      return undefined;
    }
 
    /**

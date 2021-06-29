@@ -17,21 +17,23 @@ describe('Build', () => {
    });
 
    beforeEach(() => {
+      const options = new Map([
+         ['rep', ['test1']],
+         ['repositories', {
+            test1: {},
+            test2: {},
+            'sbis3-ws': {}
+         }],
+         ['store', ''],
+         ['workDir', ''],
+         ['resources', ''],
+         ['buildTools', 'builder'],
+         ['workspace', 'application'],
+         ['rc', 'rc-10.1000']
+      ]);
+
       build = new Build({
-         testRep: ['test1'],
-         config: {
-            repositories: {
-               test1: {},
-               test2: {},
-               'sbis3-ws': {}
-            }
-         },
-         store: '',
-         workDir: '',
-         resources: '',
-         workspace: 'application',
-         rc: 'rc-10.1000',
-         argvOptions: {}
+         options
       });
       stubExecute = sinon.stub(Shell.prototype, 'execute').callsFake(() => undefined);
    });
@@ -42,49 +44,57 @@ describe('Build', () => {
 
    describe('._run', () => {
       it('should run builder', (done) => {
-         let buildB = new Build({
-            testRep: ['test1'],
-            config: {
-               repositories: {
-                  test1: {}
-               }
-            },
-            store: '',
-            buildTools: 'builder',
-            argvOptions: {}
+         const options = new Map([
+            ['rep', ['test1']],
+            ['repositories', {
+               test1: {}
+            }],
+            ['store', ''],
+            ['buildTools', 'builder']
+         ]);
+         const buildB = new Build({
+            options
          });
+
          sinon.stub(buildB, '_modulesMap').value({build: () => undefined, getCDNModules:() => []});
          sinon.stub(buildB, '_tslibInstall').callsFake(() => undefined);
          sinon.stub(buildB, '_initWithBuilder').callsFake(() => {
             done();
          });
+
          buildB._run();
       });
+
       it('should run genie', (done) => {
-         let buildG = new Build({
-            testRep: ['test1'],
-            config: {
-               repositories: {
-                  test1: {}
-               }
-            },
-            resources: '',
-            store: '',
-            buildTools: 'jinnee',
-            argvOptions: {}
+         const options = new Map([
+            ['rep', ['test1']],
+            ['repositories', {
+               test1: {}
+            }],
+            ['resources', ''],
+            ['store', ''],
+            ['buildTools', 'jinnee']
+         ]);
+
+         const buildG = new Build({
+            options
          });
+
          sinon.stub(buildG, '_modulesMap').value({build: () => undefined, getCDNModules:() => []});
          sinon.stub(buildG, '_tslibInstall').callsFake(() => undefined);
          sinon.stub(buildG, '_initWithJinnee').callsFake(() => {
             done();
          });
+
          buildG._run();
       });
    });
    describe('._makeBuilderConfig()', () => {
       let stubfs;
+
       beforeEach(() => {
          stubfs = sinon.stub(fs, 'outputFile').callsFake(() => undefined);
+
          sinon.stub(build, '_modulesMap').value({
             getRequiredModules: () => {
                return ['test1', 'test2'];
@@ -93,18 +103,22 @@ describe('Build', () => {
                return [];
             },
             get: (name) => {
-               return name === 'test1' ? {rep: 'test1'} : {rep: 'test2'};
+               return name === 'test1' ? { rep: 'test1' } : { rep: 'test2' };
             },
             has: () => false
          });
       });
+
       it('should make builder config like base', () => {
-         let baseConfig = require('../builderConfig.base.json');
-         build._pathTocdn = '/cdn'
+         const baseConfig = require('../builderConfig.base.json');
          let tConfig = {};
+
+         build._pathTocdn = '/cdn'
+
          stubfs.callsFake((fileName, config) => {
             tConfig = JSON.parse(config);
          });
+
          build._makeBuilderConfig();
          chai.expect(tConfig).to.deep.include(baseConfig);
       });
@@ -115,6 +129,7 @@ describe('Build', () => {
             chai.expect(config.staticServer).to.equal('localhost:10777');
             done();
          });
+
          build._hotReloadPort = 10777;
          build._makeBuilderConfig();
       });
@@ -126,6 +141,7 @@ describe('Build', () => {
 
    describe('._tslibInstall()', () => {
       let fsLink;
+
       beforeEach(() => {
          fsLink = sinon.stub(fs, 'symlink');
          sinon.stub(build, '_modulesMap').value({get: () => ({path: 'path/to/test'})});
@@ -133,6 +149,7 @@ describe('Build', () => {
       afterEach(() => {
          fsLink.restore();
       });
+
       it('should copy ts config', (done) => {
          fsLink.callsFake((c) => {
             chai.expect(c).to.includes('tslib.js');
@@ -144,8 +161,9 @@ describe('Build', () => {
 
    describe('_initWithBuilder', () => {
       it('should start watcher', (done) => {
-         build._options.watcher = true;
+         build.options.set('watcher', true);
          build._initWithBuilder();
+
          stubExecute.callsFake((cmd) => {
             if (cmd.includes('buildOnChangeWatcher')) {
                done();
@@ -156,8 +174,10 @@ describe('Build', () => {
 
    describe('_startHotReloadServer()', () => {
       let stubExists;
+
       beforeEach(() => {
          stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
+
          sinon.stub(build, '_modulesMap').value({
             get: (name) => {
                return name === 'HotReload' ? {path: 'path/to/HotReload'} : {};
@@ -165,32 +185,38 @@ describe('Build', () => {
             has: (name) => name === 'HotReload'
          });
       });
+
+      afterEach(() => {
+         stubExists.restore();
+      });
+
       it('should start hotreload server', (done) => {
          stubExecute.callsFake((cmd) => {
             chai.expect(cmd).to.include('HotReload');
             done();
          });
+
          sinon.stub(build, '_shouldStartHotReload').callsFake(() => true);
          build._startHotReloadServer();
       });
+
       it('should not start hotreload server', () => {
-         build._options.watcher = false;
+         build.options.set('watcher', false);
          build._startHotReloadServer();
          chai.expect(stubExecute.called).is.false;
       });
+
       it('should not start hotreload server when server not existis', () => {
-         build._options.watcher = true;
+         build.options.set('watcher', true);
          stubExists.callsFake(() => false);
          build._startHotReloadServer();
          chai.expect(stubExecute.called).is.false;
-      });
-      afterEach(() => {
-         stubExists.restore();
       });
    });
 
    describe('._initWithJinnee()', () => {
       let stubProjectSrv, stubProjectDeploy, stubSdk, stubExists, stubstatSync;
+
       beforeEach(() => {
          stubProjectSrv = sinon.stub(Project.prototype, 'prepare').callsFake(() => []);
          stubProjectDeploy = sinon.stub(Project.prototype, 'getDeploy').callsFake(() => {});
@@ -198,6 +224,7 @@ describe('Build', () => {
          stubExists = sinon.stub(fs, 'existsSync').callsFake(() => true);
          stubstatSync = sinon.stub(fs, 'statSync').callsFake(() => ({isFile: () => false}));
       });
+
       afterEach(() => {
          stubProjectSrv.restore();
          stubProjectDeploy.restore();
@@ -207,15 +234,15 @@ describe('Build', () => {
       });
 
       it('should run jinnee from pathToJinnee', (done) => {
-         build._options.pathToJinnee = 'path/to/jinnee';
+         build.options.set('pathToJinnee', 'path/to/jinnee');
+
          stubExecute.callsFake((cmd, path) => {
             if (path === 'path/to/jinnee') {
                done();
             }
          });
+
          build._initWithJinnee();
       });
    });
-
-
 });

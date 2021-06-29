@@ -16,9 +16,12 @@ describe('Project', () => {
          }
       }));
       project = new Project({
-         file: '/path/to/project.s3cld'
+         options: new Map([
+            ['projectPath', '/path/to/project.s3cld']
+         ])
       });
-      let modulesMap = new Map([
+
+      const modulesMap = new Map([
          [
             'test11',
             {
@@ -39,12 +42,14 @@ describe('Project', () => {
             }
          ]
       ]);
+
       modulesMap.getRequiredModules = () => {
          return ['test11','test22'];
       };
       modulesMap.getChildModules = () => {
          return ['test11','test22'];
       };
+
       sinon.stub(project, '_modulesMap').value(modulesMap);
       stubxmlWrite = sinon.stub(xml, 'writeXmlFile').callsFake(() => undefined);
    });
@@ -57,18 +62,21 @@ describe('Project', () => {
    describe('.getName()', () => {
       it('should return project name', async() => {
          const name = await project.getName();
+
          chai.expect(name).to.equal('project');
       });
    });
    describe('.getServices()', () => {
       it('should return project services', async() => {
          const srv = await project.getServices();
+
          chai.expect(srv).to.deep.equal(['/path/to/srv1.s3srv', '/path/to/srv2.s3srv']);
       });
    });
    describe('.getDeploy()', () => {
       it('should return project deploy', async() => {
          const srv = await project.getDeploy();
+
          chai.expect(srv).to.equal('/path/to/project.s3deploy');
       });
    });
@@ -121,7 +129,6 @@ describe('Project', () => {
             }
          });
 
-
          stubExists = sinon.stub(fs, 'existsSync').callsFake((name) => {
             return name.includes('test1.s3srv');
          });
@@ -129,6 +136,7 @@ describe('Project', () => {
 
       it('should replace path to modules', (done) => {
          project._updateSrvModules('test1.s3srv');
+
          stubxmlWrite.callsFake((filePath, srv) => {
             chai.expect(srv.service.items[0].ui_module[0].$.url).to.include('test11.s3mod');
             done();
@@ -138,6 +146,7 @@ describe('Project', () => {
       it('should prepare parent s3srv', (done) => {
          stubExists.callsFake(() => true);
          project._updateSrvModules('test1.s3srv');
+
          stubxmlWrite.callsFake((filePath, srv) => {
             if (filePath.includes('test2.s3srv')) {
                chai.expect(srv.service.items[0].ui_module[0].$.url).to.include('test22.s3mod');
@@ -152,7 +161,7 @@ describe('Project', () => {
    });
 
    describe('._addModulesToSrv()', () => {
-      let srv = {
+      const srv = {
          service: {
             items: [
                {
@@ -168,6 +177,7 @@ describe('Project', () => {
             ]
          }
       };
+
       beforeEach(() => {
          stubxml.callsFake((path) => srv);
       });

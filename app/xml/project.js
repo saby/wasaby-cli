@@ -27,10 +27,8 @@ function setUiModules(srv, modules) {
  */
 class Project {
    constructor(cfg) {
-      this.file = cfg.file;
+      this.options = cfg.options;
       this._modulesMap = cfg.modulesMap;
-      this._workDir = cfg.workDir;
-      this._builderCache = cfg.builderCache;
       this._modulesInSrv = [];
    }
 
@@ -41,8 +39,9 @@ class Project {
     */
    async _getProject() {
       if (!this._project) {
-         this._project = await xml.readXmlFile(this.file);
+         this._project = await xml.readXmlFile(this.options.get('projectPath'));
       }
+
       return this._project;
    }
 
@@ -63,7 +62,7 @@ class Project {
     * @returns {Promise<string>}
     */
    async getDeploy() {
-      const projectDir = path.dirname(this.file);
+      const projectDir = path.dirname(this.options.get('projectPath'));
       const name = await this.getName();
       return path.join(projectDir, `${name}.s3deploy`);
    }
@@ -75,7 +74,7 @@ class Project {
    async getServices() {
       if (!this._srv) {
          this._srv = [];
-         const projectDir = path.dirname(this.file);
+         const projectDir = path.dirname(this.options.get('projectPath'));
          const project = await this._getProject();
          project.cloud.items[0].service.forEach((obj) => {
             let url = obj.$.url;
@@ -153,10 +152,10 @@ class Project {
       const business_logic = deploy.distribution_deploy_schema.site[0].business_logic;
       const static_content = deploy.distribution_deploy_schema.site[0].static_content;
 
-      business_logic[0].$.target_path = this._workDir;
-      static_content[0].$.target_path = this._workDir;
+      business_logic[0].$.target_path = this.options.get('workDir');
+      static_content[0].$.target_path = this.options.get('workDir');
 
-      deploy.distribution_deploy_schema.$.json_cache = this._builderCache;
+      deploy.distribution_deploy_schema.$.json_cache = this.options.get('builderCache');
 
       if (process.platform === 'win32') {
          deploy.distribution_deploy_schema.$.compiler = 'clang';

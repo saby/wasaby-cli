@@ -1,21 +1,24 @@
 #!/usr/bin/env node
 
 const path = require('path');
+const fs = require('fs-extra');
 
 const Store = require('./app/store');
 const Build = require('./app/build');
 const Test = require('./app/test');
-const DevServer = require('./app/devServer');
 const Prepare = require('./app/prepare');
-const config = require('./app/util/config');
 const logger = require('./app/util/logger');
 const app = require('./app/app');
-const CreateIndex = require('./app/createIndex');
+const DemoIndex = require('./src/DemoIndex/DemoIndex');
+const Config = require('./src/Utils/Config');
 const CreateModule = require('./app/createModule');
+
+const initDevEnv = require('./cli/initDevEnv');
 
 const ERROR_CODE = 2;
 const LOG_FOLDER = 'log';
-const STORE = path.join(__dirname, 'store')
+const STORE = path.join(__dirname, 'store/_repos');
+
 /**
  * Модуль для запуска юнит тестов
  * @class Cli
@@ -24,56 +27,77 @@ const STORE = path.join(__dirname, 'store')
 
 class Cli {
    constructor() {
-      this._argvOptions = Cli._getArgvOptions();
-      const cfg = config.get(this._argvOptions);
-      this._config = cfg;
+      this.config = new Config();
+      this._prepareParams();
 
-      this._store = this._argvOptions.store || cfg.store || STORE;
-      if (!path.isAbsolute(this._store)) {
-         this._store = path.normalize(path.join(process.cwd(), this._store));
-      }
-
-      // на _repos остались завязаны srv и скрипт сборки пока это не убрать
-      this._store = path.join(this._store, '_repos');
-      this._rc = this._argvOptions.rc || cfg.rc;
-      this.cdnVersion = this._argvOptions.cdn || cfg.cdn || this._rc;
-      this._workDir = this._argvOptions.workDir || path.join(process.cwd(), cfg.workDir);
-      this._workspace = this._argvOptions.workspace || this._workDir;
-      this.tasks = this._argvOptions.tasks ? this._argvOptions.tasks.split(',') : ['initStore', 'build', 'startTest'];
-      this._only = !!this._argvOptions.only;
+      const workspace = this.config.consoleParams.get('workspace');
+      const nameCommand = this.config.command || this.config.params.get('tasks').join('_');
 
       // eslint-disable-next-line id-match
-      logger.logFile = path.join(this._argvOptions.workspace || __dirname, LOG_FOLDER, `test-cli-${this.tasks.join('_')}.log`);
-      logger.logDir = path.join(this._argvOptions.workspace || __dirname, LOG_FOLDER);
+      logger.logFile = path.join(workspace || __dirname, LOG_FOLDER, `test-cli-${nameCommand}.log`);
+      logger.logDir = path.join(workspace || __dirname, LOG_FOLDER);
 
-      if (this._argvOptions.rep) {
-         this._testRep = this._argvOptions.rep.split(',').map(name => name.trim());
-      } else if (cfg.testRep) {
-         this._testRep = cfg.testRep;
-         this._only = true;
+      fs.outputFileSync(
+         path.join(logger.logDir, `test_cli_${nameCommand}_options.json`),
+         JSON.stringify(Array.from(this.config.params), null, 3)
+      );
+   }
+
+   _prepareParams() {
+      const params = this.config.params;
+
+      if (params.has('store')) {
+         let storePath = params.get('store');
+
+         if (!path.isAbsolute(storePath)) {
+            storePath = path.normalize(path.join(process.cwd(), storePath));
+         }
+
+         // TODO на _repos остались завязаны srv и скрипт сборки. В версии 2.x.x надо убрать эти привязки.
+         params.set('store', path.join(storePath, '_repos'));
       } else {
-         this._testRep = ['all'];
+         params.set('store', STORE);
       }
 
-      if (this._argvOptions.projectDir || this._argvOptions.project) {
-         this._buildTools = 'jinnee';
-
-         // если сборка идет джином то исходники лежат в  intest-ps/ui/resources
-         this._resources = path.join(this._workDir, 'intest-ps', 'ui', 'resources');
-         this._projectPath = this._argvOptions.projectDir ? path.join(this._argvOptions.projectDir, 'InTest.s3cld') : '';
-         this._projectPath = this._argvOptions.project || this._projectPath;
-      } else {
-         this._buildTools = 'builder';
-         this._resources = this._workDir;
+      if (!this.config.consoleParams.has('workDir') && params.has('workDir')) {
+         params.set('workDir', path.join(process.cwd(), params.get('workDir')));
       }
 
-      this._builderCache = this._argvOptions.builderCache || './build-ui/builder-json-cache';
-      /**
-       * Признак того, что приложение запустится в режиме react-приложения
-       * @type {boolean}
-       * @private
-       */
-      this._reactApp = !!this._argvOptions.reactApp;
+      if (!params.has('workspace')) {
+         params.set('workspace', params.get('workDir'));
+      }
+
+      if (!params.has('tasks')) {
+         params.set('tasks', ['initStore', 'build', 'startTest']);
+      }
+
+      if (!params.has('builderCache')) {
+         params.set('builderCache', './build-ui/builder-json-cache');
+      }
+
+      if (!params.has('rep')) {
+         params.set('rep', ['all']);
+      }
+
+      if (!this.config.consoleParams.has('rep') && this.config.packageParams.has('rep')) {
+         params.set('only', true);
+      }
+
+      if (params.has('projectDir') || params.has('project')) {
+         params.set('buildTools', 'jinnee');
+         params.set('resources', path.join(params.get('workDir'), 'intest-ps', 'ui', 'resources'));
+
+         if (params.has('project')) {
+            params.set('projectPath', params.get('project'));
+         } else {
+            const projectDir = params.get('projectDir');
+
+            params.set('projectPath', projectDir ? path.join(projectDir, 'InTest.s3cld') : '');
+         }
+      } else {
+         params.set('buildTools', 'builder');
+         params.set('resources', params.get('workDir'));
+      }
    }
 
    /**
@@ -81,68 +105,52 @@ class Cli {
     * @return {Promise<void>}
     */
    async run() {
-      if (this.tasks.includes('initStore')) {
+      if (this.config.command === 'initDevEnv') {
+         return initDevEnv(this.config);
+      }
+
+      const tasks = this.config.params.get('tasks');
+
+      if (tasks.includes('initStore')) {
          await this.initStore();
       }
-      if (this.tasks.includes('build')) {
+
+      if (tasks.includes('build')) {
          await this.build();
       }
-      if (this.tasks.includes('startTest')) {
+
+      if (tasks.includes('startTest')) {
          await this.test();
       }
-      if (this.tasks.includes('devServer')) {
-         await this.devServer();
-      }
-      if (this.tasks.includes('app')) {
+
+      if (tasks.includes('app')) {
          await this.app();
       }
-      if (this.tasks.includes('prepare')) {
+
+      if (tasks.includes('prepare')) {
          await this.prepare();
       }
-      if (this.tasks.includes('createIndex')) {
+
+      if (tasks.includes('createIndex')) {
          await this.createIndex();
       }
-      if (this.tasks.includes('createModule')) {
+
+      if (tasks.includes('createModule')) {
          await this.createModule();
       }
    }
 
    async build() {
       const build = new Build({
-         builderCache: this._builderCache,
-         projectPath: this._projectPath,
-         rc: this._rc,
-         config: this._config,
-         resources: this._resources,
-         store: this._store,
-         testRep: this._testRep,
-         buildTools: this._buildTools,
-         workDir: this._workDir,
-         workspace: this._workspace,
-         release: this._argvOptions.release,
-         watcher: this._argvOptions.watcher,
-         builderBaseConfig: this._argvOptions.builderConfig,
-         only: this._only,
-         pathToJinnee: this._argvOptions.pathToJinnee,
-         argvOptions: this._argvOptions,
-         copy: !!this._argvOptions.copy,
-         //TODO Убрать когда возможность задать реализацию будет из корообки.
-         isReact: this._argvOptions.react,
+         options: this.config.params
       });
+
       await build.run();
    }
 
    async initStore() {
       const store = new Store({
-         argvOptions: this._argvOptions,
-         rc: this._rc,
-         cdnVersion: this.cdnVersion,
-         config: this._config,
-         store: this._store,
-         testRep: this._testRep,
-         only: this._only,
-         projectPath: this._projectPath,
-         resources: this._resources
+         options: this.config.params
       });
 
       await store.run();
@@ -150,123 +158,41 @@ class Cli {
 
    async test() {
       const test = new Test({
-         modules: this._argvOptions.modules ? this._argvOptions.modules.split(',') : [],
-         config: this._config,
-         resources: this._resources,
-         store: this._store,
-         testRep: this._testRep,
-         workDir: this._workDir,
-         workspace: this._workspace,
-         only: this._only || !!this._argvOptions.grep,
-         server: !!this._argvOptions.server,
-         rc: this._rc,
-         diff: this._argvOptions.diff,
-         coverage: this._argvOptions.coverage,
-         report: this._argvOptions.report,
-         browser: this._argvOptions.browser,
-         node: this._argvOptions.node,
-         argvOptions: this._argvOptions,
-         //TODO Убрать когда возможность задать реализацию будет из корообки.
-         isReact: this._argvOptions.react,
+         options: this.config.params,
+         only: this.config.params.get('only') || !!this.config.params.get('grep')
       });
 
       await test.run();
    }
 
-   async devServer() {
-      const devServer = new DevServer({
-         workDir: this._workDir,
-         store: this._store,
-         rc: this._rc,
-         port: this._argvOptions.port,
-         project: this._argvOptions.project,
-         workspace: this._workspace,
-         dbHost: this._argvOptions.dbHost,
-         dbName: this._argvOptions.dbName,
-         dbLogin: this._argvOptions.dbLogin,
-         dbPassword: this._argvOptions.dbPassword,
-         dbPort: this._argvOptions.dbPort
-      });
-
-      if (this._argvOptions.start) {
-         await devServer.start();
-      } else if (this._argvOptions.stop) {
-         await devServer.stop();
-      } else if (this._argvOptions.convertDB) {
-         await devServer.convertDB();
-      } else if (this._argvOptions.createIni) {
-         await devServer.createIni();
-      }
-   }
-
    async prepare() {
       const makeTsConfig = new Prepare({
-         config: this._config,
-         store: this._store,
-         testRep: this._testRep,
-         only: this._only,
-         resources: this._resources,
-         builderCache: this._builderCache,
-         tsconfig: this._argvOptions.tsconfig || this._config.tsconfig,
-         argvOptions: this._argvOptions
+         options: this.config.params
       });
 
       await makeTsConfig.run();
    }
 
-   app() {
-      const cfg = config.get();
-      const port = this._argvOptions.port || cfg.port;
-      const isDebug = !(this._argvOptions.release || cfg.release);
-      const options = Object.assign({reactApp: this._reactApp}, this._config);
+   async app() {
+      await this.createIndex();
 
-      return app.run(this._resources, port, isDebug, options);
+      return app.run(this.config.params);
    }
 
    async createIndex() {
-      const createIndex = new CreateIndex({
-         moduleName: this._argvOptions.moduleName,
-         resources: this._resources,
-         config: this._config,
-         store: this._store,
-         testRep: this._testRep,
-         workDir: this._workDir,
-         only: this._only,
-         argvOptions: this._argvOptions
+      const createIndex = new DemoIndex({
+         options: this.config.params
       });
-      await createIndex.run();
+
+      await createIndex.create();
    }
 
    async createModule() {
       const createModule = new CreateModule({
-         rc: this._rc,
-         config: this._config,
-         store: this._store,
-         testRep: this._testRep,
-         only: this._only,
-         resources: this._resources,
-         path: this._argvOptions.path,
-         argvOptions: this._argvOptions
+         options: this.config.params
       });
 
       await createModule.run();
-   }
-
-   /**
-    * Возвращает опции командной строки
-    * @private
-    */
-   static _getArgvOptions() {
-      const options = {};
-      process.argv.slice(2).forEach((arg) => {
-         if (arg.startsWith('--')) {
-            const argName = arg.substr(2);
-            const [name, value] = argName.split('=', 2);
-            options[name] = value === undefined ? true : value;
-         }
-      });
-
-      return options;
    }
 }
 
