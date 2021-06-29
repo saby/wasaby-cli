@@ -50,7 +50,7 @@ class Cli {
          params.set('store', STORE);
       }
 
-      if (params.has('workDir')) {
+      if (!this.config.consoleParams.has('workDir') && params.has('workDir')) {
          params.set('workDir', path.join(process.cwd(), params.get('workDir')));
       }
 
