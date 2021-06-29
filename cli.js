@@ -47,11 +47,14 @@ class Cli {
       const params = this.config.params;
 
       if (params.has('store')) {
-         const storePath = params.get('store');
+         let storePath = params.get('store');
 
          if (!path.isAbsolute(storePath)) {
-            params.set('store', path.normalize(path.join(process.cwd(), storePath, '_repos')));
+            storePath = path.normalize(path.join(process.cwd(), storePath));
          }
+
+         // TODO на _repos остались завязаны srv и скрипт сборки. В версии 2.x.x надо убрать эти привязки.
+         params.set('store', path.join(storePath, '_repos'));
       } else {
          params.set('store', STORE);
       }
