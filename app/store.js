@@ -131,7 +131,7 @@ class Store extends Base {
          try {
             const url = this.options.get('repositories')[name].url;
 
-            logger.log(`git clone ${url}`, name);
+            logger.log(`git clone ${url} in directory ${this.options.get('store')}`, name);
             await this._shell.execute(
                `git clone ${url} ${name}`,
                this.options.get('store'),

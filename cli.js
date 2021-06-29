@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const path = require('path');
+const fs = require('fs-extra');
 
 const Store = require('./app/store');
 const Build = require('./app/build');
@@ -29,12 +30,17 @@ class Cli {
       this.config = new Config();
       this._prepareParams();
 
-      const workspace = this.config.params.get('workspace');
+      const workspace = this.config.consoleParams.get('workspace');
       const nameCommand = this.config.command || this.config.params.get('tasks').join('_');
 
       // eslint-disable-next-line id-match
       logger.logFile = path.join(workspace || __dirname, LOG_FOLDER, `test-cli-${nameCommand}.log`);
       logger.logDir = path.join(workspace || __dirname, LOG_FOLDER);
+
+      fs.outputFileSync(
+         path.join(logger.logDir, `test_cli_${nameCommand}_options.json`),
+         JSON.stringify(Array.from(this.config.params), null, 3)
+      );
    }
 
    _prepareParams() {
