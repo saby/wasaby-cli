@@ -2618,27 +2618,6 @@
     "required": true,
     "forCDN": false
   },
-  "SchemeEditor-demo-online": {
-    "s3mod": "sbis3-schemeeditor\\client\\SchemeEditor-demo-online\\SchemeEditor-demo-online.s3mod",
-    "name": "SchemeEditor-demo-online",
-    "path": "sbis3-schemeeditor\\client\\SchemeEditor-demo-online",
-    "rep": "sbis3-schemeeditor",
-    "useModuleMap": false,
-    "entry": false,
-    "depends": [
-      "SchemeEditor",
-      "SchemeEditor-default-theme",
-      "Controls",
-      "Env",
-      "OnlineSbisRu",
-      "Types",
-      "UI",
-      "Vdom"
-    ],
-    "id": "71bf8cdb-e106-4142-b13e-45fed7ef0fde",
-    "required": true,
-    "forCDN": false
-  },
   "SchemeEditorTest": {
     "s3mod": "sbis3-schemeeditor\\tests\\unit\\SchemeEditorTest\\SchemeEditorTest.s3mod",
     "name": "SchemeEditorTest",
