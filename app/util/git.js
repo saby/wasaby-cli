@@ -82,6 +82,7 @@ class Git {
     */
    async getNearestRcBranch(rc) {
       const allBranch = await this._getAllBranch();
+      const majorRcVersion = rc.slice(0, rc.lastIndexOf('.') + 1);
       const mask = `origin/${rc.slice(0, rc.lastIndexOf('.') + 2)}`;
       const branchMask = [];
 
@@ -96,29 +97,47 @@ class Git {
       }
 
       const numberVersionRC = +rc.slice(rc.lastIndexOf('.') + 1);
-      const numbersVersBranchs = [];
+      const numbersUpVersBranches = [];
+      const numbersDownVersBranches = [];
 
       for (const branch of branchMask) {
-         let numberVersionBranch = branch.slice(branch.lastIndexOf('.') + 1);
+         const numberVersionBranch = +branch.slice(branch.lastIndexOf('.') + 1);
 
-         if (/^\d*$/.test(numberVersionBranch) && numberVersionRC < +numberVersionBranch) {
-            numbersVersBranchs.push(+numberVersionBranch);
+         if (typeof numberVersionBranch === 'number') {
+            if (numberVersionRC < numberVersionBranch) {
+               numbersUpVersBranches.push(numberVersionBranch);
+            }
+
+            if (numberVersionRC > numberVersionBranch) {
+               numbersDownVersBranches.push(numberVersionBranch);
+            }
          }
       }
 
-      if (numbersVersBranchs.length === 0) {
+      if (numbersUpVersBranches.length === 0 && numbersDownVersBranches.length === 0) {
          return rc;
       }
 
-      const majorRcVersion = rc.slice(0, rc.lastIndexOf('.') + 1);
-      const minorRcVersion = numbersVersBranchs.sort((a, b) => a - b).shift();
+      const minorRcVersion = this.getMinorVersionBranch(numbersUpVersBranches, numbersDownVersBranches);
       const detectedBranch = `${majorRcVersion}${minorRcVersion}`;
 
-      if (!majorRcVersion || !minorRcVersion || !detectedBranch) {
+      if (!majorRcVersion || !minorRcVersion) {
          return rc;
       }
 
       return detectedBranch;
+   }
+
+   getMinorVersionBranch(upVersions, downVersions) {
+      if (upVersions.length !== 0) {
+         return upVersions.sort((current, next) => current - next).shift();
+      }
+
+      if (downVersions.length !== 0) {
+         return downVersions.sort((current, next) => current -next).pop();
+      }
+
+      return '';
    }
 
    /**

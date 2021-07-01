@@ -605,8 +605,9 @@ class Test extends Base {
             const unitsPath = require.resolve('saby-units/cli.js');
             const coverage = this.options.get('coverage') ? '--coverage' : '';
             const report = this._report === 'xml' ? '--report' : '';
-            const otherArguments = this._getUnknownArgs(['tasks']);
-            let args = [
+            const otherArguments = this._getUnknownArgs(['tasks', 'report', 'coverage']);
+
+            const args = [
                unitsPath,
                '--isolated',
                `--config=${pathToConfig}`,
@@ -852,14 +853,19 @@ class Test extends Base {
       const args = [];
 
       for (const [name, value] of this.options) {
-         if (ignoreArgs.includes(name) || typeof value === 'object') {
+         if (ignoreArgs.includes(name)) {
             continue;
          }
 
-         if (typeof value === 'boolean') {
-            args.push(`--${name}`);
-         } else {
-            args.push(`--${name}=${value.includes(' ') ? `"${value}"` : value}`);
+         switch (typeof value) {
+            case 'boolean': {
+               args.push(`--${name}`);
+               break;
+            }
+            case 'string': {
+               args.push(`--${name}=${value.includes(' ') ? `"${value}"` : value}`);
+               break;
+            }
          }
       }
 
