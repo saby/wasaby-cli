@@ -77,9 +77,7 @@ class Config {
          return result;
       }
 
-      for (const repName of section.repositories) {
-         const link = section.repositories[repName];
-
+      for (const [repName, link] of Object.entries(section.repositories)) {
          if (isUrl.test(link)) {
             const [url, version] = link.split('#');
 
