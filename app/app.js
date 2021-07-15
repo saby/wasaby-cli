@@ -30,7 +30,6 @@ async function run( options) {
    const app = express();
    const availablePort = await getPort(options.get('port') || 1024);
    const rootModule = options.get('rootModule') || '';
-   const reactApp = !!options.get('reactApp');
    const workDir = process.cwd();
 
    process.chdir(options.get('resources'));
@@ -66,7 +65,7 @@ async function run( options) {
          Env.constants.modules = contents.modules;
 
          if (!AppInit.isInit()) {
-            const config = { resourceRoot, reactApp };
+            const config = { resourceRoot };
             // eslint-disable-next-line new-cap
             AppInit.default(config, new AppEnv.EnvNodeJS(config), new AppState.StateReceiver(UIState.Serializer));
          }
@@ -98,7 +97,7 @@ async function run( options) {
 
    app.get('/*', (req, res) => {
       ready.then(() => {
-         serverSideRender(req, res, { isDebug, reactApp });
+         serverSideRender(req, res, { isDebug });
       });
    });
 
@@ -130,7 +129,6 @@ function serverSideRender(req, res, config) {
       wsRoot: '/WS.Core/',
       resourceRoot,
       appRoot: '/',
-      reactApp: config.reactApp,
       _options: {
          preInitScript: `window.wsConfig.debug = ${config.isDebug};window.wsConfig.userConfigSupport = false;`
       }
@@ -153,11 +151,6 @@ function serverSideRender(req, res, config) {
 function presetCookies(req, res, config) {
    if (config.isDebug) {
       setCookie(req, res, 's3debug', true);
-   }
-   if (config.reactApp) {
-      setCookie(req, res, 'reactFeatures', 'Control');
-   } else {
-      deleteCookie(req, res, 'reactFeatures');
    }
 }
 
