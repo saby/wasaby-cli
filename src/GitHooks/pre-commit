@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+const CMD = require('../../src/Utils/CMD');
+const pathUtils = require('../../src/Utils/path');
+
+const child = CMD.fork(pathUtils.join(__dirname, '../../cli'), [
+   'runPreCommitHook'
+], {});
+
+child.on('exit', (code, signal) => {
+   if (code !== 0) {
+      console.log('Command "git commit" was rejected. Pre-commit hook finished with errors. See console or debug.log to path "./wasaby-cli_artifacts/runPreCommitHook/debug.log"');
+   }
+
+   process.exit(code);
+});
