@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ui_module name="NewModuleForMM" id="f6cf2d17-8652-4108-bbe5-20de2a3b965a" kaizen_zone="65f6606e-1927-419b-a276-9f53713ee8a2" package="ModuleManager" required="0" responsible="Кудрявцев И.С." responsible_uuid="836e31cb-65f0-4d1e-afc5-59bf776ef48b" version="1.00">
+  <depends/>
+</ui_module>
