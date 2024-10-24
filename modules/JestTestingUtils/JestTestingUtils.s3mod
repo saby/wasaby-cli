@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ui_module name="JestTestingUtils" id="6608d2df-d0d2-479d-a1e8-ce07c7109b46" kaizen_zone="71073c66-e8f4-4b91-90ae-47dffeddf60a" responsible="Зайцев А.С." responsible_uuid="9ac20e80-7163-4fc9-8238-1e3b7d7c6f74">
+  <depends/>
+  <test environment="NodeJS" framework="Jest" />
+    <typescript>
+      <arg key="typecheck" value="1"/>
+    </typescript>
+</ui_module>
