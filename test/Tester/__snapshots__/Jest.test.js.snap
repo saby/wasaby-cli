@@ -1,0 +1,1132 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jest executor should return valid Jest configuration in JSDOM 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should return valid Jest configuration in JSDOM 2`] = `
+{
+  "collectCoverage": false,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/JSDOM/result/coverage",
+  "coverageReporters": [
+    [
+      "html",
+    ],
+  ],
+  "maxWorkers": 4,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/JSDOM/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/JSDOM/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "2048MB",
+}
+`;
+
+exports[`Jest executor should return valid Jest configuration in Jenkins in JSDOM 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should return valid Jest configuration in Jenkins in JSDOM 2`] = `
+{
+  "collectCoverage": false,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/JSDOM/result/coverage",
+  "coverageReporters": [
+    [
+      "html",
+    ],
+  ],
+  "maxWorkers": 4,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/JSDOM/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/JSDOM/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+    [
+      "TestController/Executor/Jest/reporter.js",
+      {
+        "ancestorSeparator": " › ",
+        "classNameTemplate": ".{classname}",
+        "includeConsoleOutput": "true",
+        "outputFile": "/example/results/JestUnitTests/JSDOM/result/xunit-report.xml",
+        "suiteName": "Jest Unit Tests",
+        "suiteNameTemplate": " › {filepath}",
+        "titleTemplate": "{title}",
+      },
+    ],
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "2048MB",
+}
+`;
+
+exports[`Jest executor should return valid Jest configuration in Jenkins in NodeJS 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should return valid Jest configuration in Jenkins in NodeJS 2`] = `
+{
+  "collectCoverage": false,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/NodeJS/result/coverage",
+  "coverageReporters": [
+    [
+      "html",
+    ],
+  ],
+  "maxWorkers": 4,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+    [
+      "TestController/Executor/Jest/reporter.js",
+      {
+        "ancestorSeparator": " › ",
+        "classNameTemplate": ".{classname}",
+        "includeConsoleOutput": "true",
+        "outputFile": "/example/results/JestUnitTests/NodeJS/result/xunit-report.xml",
+        "suiteName": "Jest Unit Tests",
+        "suiteNameTemplate": " › {filepath}",
+        "titleTemplate": "{title}",
+      },
+    ],
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "2048MB",
+}
+`;
+
+exports[`Jest executor should return valid Jest configuration in NodeJS 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should return valid Jest configuration in NodeJS 2`] = `
+{
+  "collectCoverage": false,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/NodeJS/result/coverage",
+  "coverageReporters": [
+    [
+      "html",
+    ],
+  ],
+  "maxWorkers": 4,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "2048MB",
+}
+`;
+
+exports[`Jest executor should use default coverage provider 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should use default coverage provider 2`] = `
+{
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/NodeJS/result/coverage",
+  "coverageReporters": [
+    [
+      "html",
+    ],
+  ],
+  "maxWorkers": 1,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+    [
+      "TestController/Executor/Jest/reporter.js",
+      {
+        "ancestorSeparator": " › ",
+        "classNameTemplate": ".{classname}",
+        "includeConsoleOutput": "true",
+        "outputFile": "/example/results/JestUnitTests/NodeJS/result/xunit-report.xml",
+        "suiteName": "Jest Unit Tests",
+        "suiteNameTemplate": " › {filepath}",
+        "titleTemplate": "{title}",
+      },
+    ],
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "8192MB",
+}
+`;
+
+exports[`Jest executor should use given coverage provider 1`] = `
+"
+const SOURCE_MODULES = ["/example/repositories/FirstRep/source","/example/repositories/SecondRep/source"];
+const BUILD_MODULES = ["/example/application/First","/example/application/Second"];
+
+function resolvePath(src, dst, filePath) {
+   const path = filePath.replace(/\\\\/gi, '/');
+
+   for (let index = 0; index < src.length; ++index) {
+      if (path.startsWith(src[index])) {
+         return dst[index] + path.slice(src[index].length);
+      }
+   }
+
+   return path;
+}
+
+// Resolve snapshot file.
+// Example:
+//    Input:   dist/src/__test__/Post.spec.js
+//    Output:  src/__test__/__snapshot__/Post.spec.ts.snap
+// @param {string} testPath Test file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveSnapshotPath(testPath, snapshotExtension) {
+   return resolvePath(BUILD_MODULES, SOURCE_MODULES, testPath) + snapshotExtension;
+}
+
+// Resolve test file path.
+// Example:
+//    Input:   src/__test__/__snapshot__/Post.spec.ts.snap
+//    Output:  dist/src/__test__/Post.spec.js
+// @param {string} snapshotFilePath Snapshot file path.
+// @param {string} snapshotExtension Snapshot extension to be used (default is .snap)
+function resolveTestPath(snapshotFilePath, snapshotExtension) {
+   return resolvePath(SOURCE_MODULES, BUILD_MODULES, snapshotFilePath).slice(0, -snapshotExtension.length);
+}
+
+// resolveTestPath(resolveSnapshotPath(testPathForConsistencyCheck)) === testPathForConsistencyCheck
+const testPathForConsistencyCheck = "/example/application/First/Component/index.js";
+
+module.exports = {
+   resolveSnapshotPath: resolveSnapshotPath,
+   resolveTestPath: resolveTestPath,
+   testPathForConsistencyCheck: testPathForConsistencyCheck
+};
+"
+`;
+
+exports[`Jest executor should use given coverage provider 2`] = `
+{
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "**/*.{js,jsx}",
+    "!**/node_modules/**",
+    "!**/third-party/**",
+  ],
+  "coverageDirectory": "/example/results/JestUnitTests/NodeJS/result/coverage",
+  "coverageReporters": [
+    [
+      "json",
+      {
+        "file": "coverage-final.json",
+      },
+    ],
+  ],
+  "maxWorkers": 1,
+  "projects": [
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "First_NodeJS",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": false,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/First",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "node",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+    {
+      "automock": false,
+      "cacheDirectory": "/example/results/cache/jest",
+      "clearMocks": true,
+      "displayName": "Second_JSDOM",
+      "errorOnDeprecated": false,
+      "globals": {
+        "__SABY_APPLICATION_DIRECTORY__": "/example/application",
+        "__SABY_LOAD_CSS__": true,
+      },
+      "moduleDirectories": [
+        "node_modules",
+        "/example/application",
+      ],
+      "moduleNameMapper": {
+        "react-dom": "/example/application/React/third-party/react-dom/react-dom.development.js",
+        "react-dom/server": "/example/application/React/third-party/react-dom/server/react-dom-server.browser.development.js",
+        "react-dom/test-utils": "/example/application/React/third-party/react-dom/test-utils/react-dom-test-utils.development.js",
+      },
+      "resetMocks": false,
+      "resetModules": false,
+      "restoreMocks": true,
+      "rootDir": "/example/application",
+      "roots": [
+        "/example/application/Second",
+      ],
+      "runner": "TestController/Executor/Jest/Runner.js",
+      "setupFilesAfterEnv": [
+        "TestController/Executor/Jest/environment/setupFilesAfterEnv.js",
+      ],
+      "slowTestThreshold": 5,
+      "snapshotFormat": {
+        "escapeString": true,
+        "printBasicPrototype": true,
+      },
+      "snapshotResolver": "/example/results/JestUnitTests/NodeJS/snapshot-resolver.js",
+      "testEnvironment": "jsdom",
+      "testEnvironmentOptions": {
+        "contentType": "text/html",
+        "includeNodeLocations": true,
+        "pretendToBeVisual": true,
+        "referrer": "http://localhost",
+        "resources": "usable",
+        "runScripts": "dangerously",
+        "storageQuota": 10000000,
+        "url": "http://localhost",
+      },
+      "testMatch": [
+        "**/*.test.js",
+      ],
+      "testRunner": "TestController/Executor/Jest/testRunner.js",
+      "transform": {},
+    },
+  ],
+  "reporters": [
+    "default",
+    [
+      "TestController/Executor/Jest/reporter.js",
+      {
+        "ancestorSeparator": " › ",
+        "classNameTemplate": ".{classname}",
+        "includeConsoleOutput": "true",
+        "outputFile": "/example/results/JestUnitTests/NodeJS/result/xunit-report.xml",
+        "suiteName": "Jest Unit Tests",
+        "suiteNameTemplate": " › {filepath}",
+        "titleTemplate": "{title}",
+      },
+    ],
+  ],
+  "testFailureExitCode": 1,
+  "testTimeout": 6000,
+  "workerIdleMemoryLimit": "8192MB",
+}
+`;
