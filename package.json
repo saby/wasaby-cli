@@ -1,0 +1,73 @@
+{
+   "name": "wasaby-cli",
+   "version": "26.6000.0",
+   "description": "Build and run unit tests for wasaby",
+   "scripts": {
+      "postinstall": "node ./tools/patch-jest-library.js",
+      "test": "jest --roots=test",
+      "coverage": "jest --coverage"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git@git.sbis.ru:saby/wasaby-cli.git"
+   },
+   "bin": {
+      "wasaby-cli": "./cli.js"
+   },
+   "jest": {
+      "transformIgnorePatterns": [
+         "node_modules/(?!p-map)/"
+      ],
+      "roots": [
+         "src",
+         "test"
+      ],
+      "collectCoverageFrom": [
+         "**/*.js"
+      ],
+      "coverageDirectory": "./coverage",
+      "coverageReporters": [
+         [
+            "html",
+            {
+               "subdir": "coverage"
+            }
+         ]
+      ]
+   },
+   "dependencies": {
+      "commander": "15.0.0",
+      "fs-extra": "11.3.5",
+      "glob": "13.0.6",
+      "p-map": "7.0.4",
+      "xml2js": "0.6.2",
+      "tree-kill": "1.2.2",
+      "ps-list": "7.2.0",
+      "express": "5.2.1",
+      "cookie-parser": "1.4.7",
+      "open": "11.0.0",
+      "openssl-nodejs": "1.0.5",
+      "jest": "30.4.2",
+      "@testing-library/react": "16.3.2",
+      "@testing-library/dom": "10.4.1",
+      "@testing-library/user-event": "14.6.1",
+      "@types/jest": "30.0.0",
+      "@jest/reporters": "30.4.1",
+      "jest-junit": "17.0.0",
+      "jest-environment-jsdom": "30.4.1",
+      "jest-environment-node": "30.4.1",
+      "saby-typescript": "git+ssh://git@git.sbis.ru:saby/typescript.git#rc-26.6000",
+      "saby-units": "git+ssh://git@git.sbis.ru:saby/units.git#rc-26.6000",
+      "sbis3-builder": "git+ssh://git@git.sbis.ru:saby/builder.git#rc-26.6000",
+      "es5-ext": "0.10.53"
+   },
+   "devDependencies": {
+      "@babel/preset-env": "7.29.7"
+   },
+   "resolutions": {
+      "es5-ext": "0.10.53"
+   },
+   "overrides": {
+      "es5-ext": "0.10.53"
+   }
+}
